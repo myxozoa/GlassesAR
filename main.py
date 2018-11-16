@@ -3,6 +3,25 @@ import dlib
 import cv2
 import numpy as np
 
+obj = open("teddy.obj", "r")
+vertex_array = []
+triangle_sections = []
+
+
+for line in obj:
+  line_split = line.split(" ")
+
+  if line_split[0] == "v":
+    vertex_array.append([ float(x) for x in line_split[1:] ])
+
+  if line_split[0] == "f":
+    temp = [ max(int(x) - 1, 0) for x in line_split[1:] ]
+
+    triangle_sections.append(temp[0:2])
+    triangle_sections.append(temp[1:3])
+
+vertex_array.append([0, 0, 0])
+
 # hardcoded webcam image size for now
 size = (480, 640)
 
@@ -35,19 +54,31 @@ object_pts = np.float32([[6.825897, 6.760612, 4.402142],
                          [0.000000, -3.116408, 6.097667],
                          [0.000000, -7.415691, 4.070434]])
 
-reprojectsrc = np.float32([[10.0, 10.0, 10.0],
-                           [10.0, 10.0, -10.0],
-                           [10.0, -10.0, -10.0],
-                           [10.0, -10.0, 10.0],
-                           [-10.0, 10.0, 10.0],
-                           [-10.0, 10.0, -10.0],
-                           [-10.0, -10.0, -10.0],
-                           [-10.0, -10.0, 10.0]])
+# reprojectsrc = np.float32([[10.0, 10.0, 10.0],
+#                            [10.0, 10.0, -10.0],
+#                            [10.0, -10.0, -10.0],
+#                            [10.0, -10.0, 10.0],
+#                            [-10.0, 10.0, 10.0],
+#                            [-10.0, 10.0, -10.0],
+#                            [-10.0, -10.0, -10.0],
+#                            [-10.0, -10.0, 10.0]
+#                            ])
 
-line_pairs = [[0, 1], [1, 2], [2, 3], [3, 0],
-              [4, 5], [5, 6], [6, 7], [7, 4],
-              [0, 4], [1, 5], [2, 6], [3, 7]]
+# line_pairs = [[0, 1], [1, 2], [2, 3], [3, 0],
+#               [4, 5], [5, 6], [6, 7], [7, 4],
+#               [0, 4], [1, 5], [2, 6], [3, 7]
+#               ]
 
+# reprojectsrc = np.float32([[0.0, 10.0, 10.0],
+#               [0.0, 10.0, -10.0]])
+
+# line_pairs = [[0, 1]]
+
+reprojectsrc = np.float32(vertex_array)
+
+line_pairs = triangle_sections
+
+# print(line_pairs)
 def head_pose(shape):
   image_pts = np.float32([shape[17], shape[21], shape[22], shape[26], shape[36],
                           shape[39], shape[42], shape[45], shape[31], shape[35],
@@ -58,7 +89,7 @@ def head_pose(shape):
   reprojectdst, _ = cv2.projectPoints(reprojectsrc, rotation_vec, translation_vec, cam_matrix,
                                       dist_coeffs)
 
-  reprojectdst = tuple(map(tuple, reprojectdst.reshape(8, 2)))
+  reprojectdst = tuple(map(tuple, reprojectdst.reshape(-1, 2)))
 
   # calc euler angle
   rotation_mat, _ = cv2.Rodrigues(rotation_vec)
@@ -76,6 +107,8 @@ def main():
   predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
   cap = cv2.VideoCapture(0)
+  fourcc = cv2.VideoWriter_fourcc(*'XVID')
+  out = cv2.VideoWriter('output.avi',fourcc, 20.0, (640,480))
   while True:
     # grabbing images from the webcam and converting it into grayscale
       _, image = cap.read()
@@ -96,19 +129,21 @@ def main():
 
         reprojectdst, euler_angle = head_pose(shape)
 
-        # print(reprojectdst)
 
-        for (x, y) in shape:
-          cv2.circle(blank_image, (x, y), 2, (0, 0, 0), -1)
+        # print(len(reprojectdst))
+
+        # for (x, y) in shape:
+        #   cv2.circle(blank_image, (x, y), 2, (255, 0, 0), -1)
 
         for start, end in line_pairs:
           # print(start, end)
-          cv2.line(blank_image, reprojectdst[start], reprojectdst[end], (0, 0, 255))
+          cv2.line(blank_image, reprojectdst[start], reprojectdst[end], (0, 0, 0))
 
-        text(cv2, blank_image, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20))
-        text(cv2, blank_image, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50))
-        text(cv2, blank_image, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80))
+        # text(cv2, blank_image, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20))
+        # text(cv2, blank_image, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50))
+        # text(cv2, blank_image, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80))
 
+      out.write(blank_image)
       cv2.imshow("Output", blank_image)
 
       # close app with esc key
