@@ -107,6 +107,10 @@ def main():
   predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
   cap = cv2.VideoCapture(0)
+
+  cap.set(3, size[1])
+  cap.set(4, size[0])
+
   fourcc = cv2.VideoWriter_fourcc(*'XVID')
   out = cv2.VideoWriter('output.avi',fourcc, 20.0, (640,480))
   while True:
@@ -133,18 +137,18 @@ def main():
         # print(len(reprojectdst))
 
         # for (x, y) in shape:
-        #   cv2.circle(blank_image, (x, y), 2, (255, 0, 0), -1)
+        #   cv2.circle(image, (x, y), 2, (255, 0, 0), -1)
 
         for start, end in line_pairs:
           # print(start, end)
-          cv2.line(blank_image, reprojectdst[start], reprojectdst[end], (0, 0, 0))
+          cv2.line(image, reprojectdst[start], reprojectdst[end], (0, 255, 0))
 
-        # text(cv2, blank_image, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20))
-        # text(cv2, blank_image, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50))
-        # text(cv2, blank_image, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80))
+        # text(cv2, image, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20))
+        # text(cv2, image, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50))
+        # text(cv2, image, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80))
 
-      out.write(blank_image)
-      cv2.imshow("Output", blank_image)
+      out.write(image)
+      cv2.imshow("Output", image)
 
       # close app with esc key
       k = cv2.waitKey(5) & 0xFF
