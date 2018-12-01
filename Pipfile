@@ -11,6 +11,7 @@ opencv-python = "*"
 dlib = "*"
 imutils = "*"
 scipy = "*"
+pyopengl = "*"
 
 [requires]
 python_version = "3.6"

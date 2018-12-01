@@ -2,7 +2,11 @@ from imutils import face_utils
 import dlib
 import cv2
 import numpy as np
-import camera
+from webcam import Webcam
+
+class Glasses:
+  def __init__(self):
+    
 
 obj = open("teddy.obj", "r")
 vertex_array = []
