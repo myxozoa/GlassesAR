@@ -2,6 +2,7 @@ from imutils import face_utils
 import dlib
 import cv2
 import numpy as np
+import camera
 
 obj = open("teddy.obj", "r")
 vertex_array = []
@@ -15,6 +16,7 @@ for line in obj:
     vertex_array.append([ float(x) for x in line_split[1:] ])
 
   if line_split[0] == "f":
+    # fix since obj files seem to have 1-indexed verticies
     temp = [ max(int(x) - 1, 0) for x in line_split[1:] ]
 
     triangle_sections.append(temp[0:2])
@@ -129,6 +131,8 @@ def main():
 
       if (len(rect) > 0):
         shape_pred = predictor(gray, rect[0])
+
+        # convert face landmarks to 2-tuple of (x, y) coords
         shape = face_utils.shape_to_np(shape_pred)
 
         reprojectdst, euler_angle = head_pose(shape)

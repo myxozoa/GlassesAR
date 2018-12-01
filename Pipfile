@@ -10,6 +10,7 @@ numpy = "*"
 opencv-python = "*"
 dlib = "*"
 imutils = "*"
+scipy = "*"
 
 [requires]
 python_version = "3.6"
