@@ -29,6 +29,7 @@ size = (480, 640)
 
 focal_length = size[1]
 center = (size[1]/2, size[0]/2)
+
 K = np.array(
                          [[focal_length, 0, center[0]],
                          [0, focal_length, center[1]],
