@@ -66,10 +66,9 @@ class Glasses:
 
         blank_image[:,0:width] = (255,255,255)
 
-        # show the gray image
-
         rect = detector(gray, 0)
 
+        # if face
         if (len(rect) > 0):
           shape_pred = predictor(gray, rect[0])
 
@@ -78,14 +77,10 @@ class Glasses:
 
           reprojectdst, euler_angle = self.head_pose(shape)
 
-
-          # print(len(reprojectdst))
-
           # for (x, y) in shape:
           #   cv2.circle(image, (x, y), 2, (255, 0, 0), -1)
 
           for start, end in self.line_pairs:
-            # print(start, end)
             cv2.line(image, reprojectdst[start], reprojectdst[end], (0, 255, 0))
 
           # self.text(cv2, image, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20))
@@ -93,12 +88,16 @@ class Glasses:
           # self.text(cv2, image, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80))
 
 
-        cv2.imshow("Output", image)
+        cv2.imshow(APP_NAME, image)
 
         # close app with esc key
         k = cv2.waitKey(5) & 0xFF
         if k == 27:
             break
+
+        # close app if window is closed with the x button
+        if cv2.getWindowProperty(APP_NAME, 0) < 0:
+          break
 
     cv2.destroyAllWindows()
     self.webcam.release()

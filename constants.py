@@ -19,3 +19,5 @@ HEAD_PTS = [[6.825897, 6.760612, 4.402142],
 DEFAULT_K = [[FOCAL_LENGTH, 0, CENTER[0]],
                             [0, FOCAL_LENGTH, CENTER[1]],
                             [0, 0, 1]]
+
+APP_NAME = "Glasses"
