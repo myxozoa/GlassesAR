@@ -21,3 +21,7 @@ DEFAULT_K = [[FOCAL_LENGTH, 0, CENTER[0]],
                             [0, 0, 1]]
 
 APP_NAME = "Glasses"
+
+MODEL = "teddy.obj"
+
+SHAPE_PREDICTOR = "shape_predictor_68_face_landmarks.dat"

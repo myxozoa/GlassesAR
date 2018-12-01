@@ -20,7 +20,7 @@ class Glasses:
     # head points estimation
     self.object_pts = np.float32(HEAD_PTS)
 
-    self.obj_data = loadobj("teddy.obj")
+    self.obj_data = loadobj(MODEL)
 
     self.reprojectsrc = np.float32(self.obj_data[0])
 
@@ -54,7 +54,7 @@ class Glasses:
     self.webcam.start()
     detector = dlib.get_frontal_face_detector()
 
-    predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
+    predictor = dlib.shape_predictor(SHAPE_PREDICTOR)
 
     while True:
       # grabbing images from the webcam and converting it into grayscale
@@ -68,7 +68,7 @@ class Glasses:
 
         rect = detector(gray, 0)
 
-        # if face
+        # if face detected
         if (len(rect) > 0):
           shape_pred = predictor(gray, rect[0])
 
@@ -77,15 +77,15 @@ class Glasses:
 
           reprojectdst, euler_angle = self.head_pose(shape)
 
-          # for (x, y) in shape:
-          #   cv2.circle(image, (x, y), 2, (255, 0, 0), -1)
+          for (x, y) in shape:
+            cv2.circle(image, (x, y), 2, (255, 0, 0), -1)
 
           for start, end in self.line_pairs:
             cv2.line(image, reprojectdst[start], reprojectdst[end], (0, 255, 0))
 
-          # self.text(cv2, image, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20))
-          # self.text(cv2, image, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50))
-          # self.text(cv2, image, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80))
+          self.text(cv2, image, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20))
+          self.text(cv2, image, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50))
+          self.text(cv2, image, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80))
 
 
         cv2.imshow(APP_NAME, image)
