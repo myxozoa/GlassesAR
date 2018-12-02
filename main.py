@@ -16,7 +16,7 @@ class Glasses:
   def __init__(self):
     self.webcam = Webcam()
     self.solver = Solver()
-    self.texture_background = None
+    self.webcam_background = None
 
   def text(self, cv, image, txt, pos):
     cv.putText(image, txt, pos, cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0), thickness=2)
@@ -28,7 +28,7 @@ class Glasses:
     glutInitWindowPosition(100, 100)
     glutCreateWindow(APP_NAME)
 
-  def setupGL(self):
+  def setup_gl(self):
     glClearColor(0.0, 0.0, 0.0, 0.0)
     glClearDepth(1.0)
     glDepthFunc(GL_LESS)
@@ -44,9 +44,9 @@ class Glasses:
 
     # assign texture
     glEnable(GL_TEXTURE_2D)
-    self.texture_background = glGenTextures(1)
+    self.webcam_background = glGenTextures(1)
 
-  def drawWebcam(self, image):
+  def draw_webcam(self, image):
     # convert image to opengl tex format
     bg_image = cv2.flip(image, 0)
     bg_image = Image.fromarray(bg_image)
@@ -55,13 +55,13 @@ class Glasses:
     bg_image = bg_image.tobytes('raw', 'BGRX', 0, -1)
 
     # create bg texture
-    glBindTexture(GL_TEXTURE_2D, self.texture_background)
+    glBindTexture(GL_TEXTURE_2D, self.webcam_background)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
     glTexImage2D(GL_TEXTURE_2D, 0, 3, ix, iy, 0, GL_RGBA, GL_UNSIGNED_BYTE, bg_image)
 
     # draw bg
-    glBindTexture(GL_TEXTURE_2D, self.texture_background)
+    glBindTexture(GL_TEXTURE_2D, self.webcam_background)
     glPushMatrix()
     glTranslatef(0.0,0.0,-10.0)
     glBegin(GL_QUADS)
@@ -78,7 +78,7 @@ class Glasses:
 
     image = self.webcam.get_current_frame()
 
-    self.drawWebcam(image)
+    self.draw_webcam(image)
 
     glutSwapBuffers()
 
@@ -87,7 +87,7 @@ class Glasses:
     self.setupWindow()
     glutDisplayFunc(self.draw)
     glutIdleFunc(self.draw)
-    self.setupGL()
+    self.setup_gl()
     glutMainLoop()
     
     # # main loop
