@@ -82,7 +82,7 @@ class Glasses:
           if transform is not None:
             transform = np.append(transform, [[0, 0, 1]], axis=0)
 
-          print(transform)
+          # print(transform)
 
         # face detection
         rect = detector(gray, 0)
@@ -112,8 +112,11 @@ class Glasses:
           self.text(cv2, image, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50))
           self.text(cv2, image, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80))
 
-
+        # output image to opencv window
         cv2.imshow(APP_NAME, image)
+
+        # write frame to output file
+        self.webcam.write_output(image)
 
         prev_frame = gray
 
