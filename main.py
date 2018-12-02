@@ -56,15 +56,32 @@ class Glasses:
 
     predictor = dlib.shape_predictor(SHAPE_PREDICTOR)
 
+    prev_frame = self.webcam.get_current_frame()
+    prev_reprojection = None
+
     while True:
       # grabbing images from the webcam and converting it into grayscale
         image = self.webcam.get_current_frame()
         height, width, channels = image.shape
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        blank_image = np.zeros((height,width,3), np.uint8)
 
+        # blank image for debug
+        blank_image = np.zeros((height,width,3), np.uint8)
         blank_image[:,0:width] = (255,255,255)
+
+        if prev_reprojection is not None:
+          current_flow, status, _ = cv2.calcOpticalFlowPyrLK(prev_frame, gray, prev_reprojection, np.array([]))
+          # prev_reprojection, current_flow = map(lambda flows: flows[status.ravel().astype(bool)], [prev_reprojection, current_flow])
+          # transform = cv2.estimateRigidTransform(prev_reprojection, current_flow, True)
+
+          # if transform is not None:
+          #   transform = np.append(transform, [[0, 0, 1]], axis=0)
+          # if transform is None:
+          #   transform = transforms[-1]
+
+          # print(transform)
+
 
         rect = detector(gray, 0)
 
@@ -77,11 +94,15 @@ class Glasses:
 
           reprojectdst, euler_angle = self.head_pose(shape)
 
+          # not sure if this is correct
+          prev_reprojection = np.array(shape).astype(np.float32)
+
           for (x, y) in shape:
             cv2.circle(image, (x, y), 2, (255, 0, 0), -1)
 
           for start, end in self.line_pairs:
             cv2.line(image, reprojectdst[start], reprojectdst[end], (0, 255, 0))
+
 
           self.text(cv2, image, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20))
           self.text(cv2, image, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50))
@@ -89,6 +110,8 @@ class Glasses:
 
 
         cv2.imshow(APP_NAME, image)
+
+        prev_frame = gray
 
         # close app with esc key
         k = cv2.waitKey(5) & 0xFF
