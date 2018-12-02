@@ -20,7 +20,7 @@ DEFAULT_K = [[FOCAL_LENGTH, 0, CENTER[0]],
                             [0, FOCAL_LENGTH, CENTER[1]],
                             [0, 0, 1]]
 
-APP_NAME = "Glasses"
+APP_NAME = b"GlassesAR"
 
 MODEL = "teddy.obj"
 
