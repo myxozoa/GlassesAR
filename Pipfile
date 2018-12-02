@@ -12,6 +12,7 @@ dlib = "*"
 imutils = "*"
 scipy = "*"
 pyopengl = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.6"
