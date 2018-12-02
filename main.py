@@ -50,27 +50,21 @@ class Glasses:
   def text(self, cv, image, txt, pos):
     cv.putText(image, txt, pos, cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0), thickness=2)
 
-  def calculate_optical_flow(self, prev_frame, gray, prev_reprojection):
-    current_flow, status, _ = cv2.calcOpticalFlowPyrLK(prev_frame, gray, prev_reprojection, np.array([]))
-    prev_reprojection, current_flow = map(lambda flows: flows[status.ravel().astype(bool)], [prev_reprojection, current_flow])
-    transform = cv2.estimateRigidTransform(prev_reprojection, current_flow, True)
+  # def calculate_optical_flow(self, prev_frame, gray, prev_reprojection):
+  #   current_flow, status, _ = cv2.calcOpticalFlowPyrLK(prev_frame, gray, prev_reprojection, np.array([]))
+  #   prev_reprojection, current_flow = map(lambda flows: flows[status.ravel().astype(bool)], [prev_reprojection, current_flow])
+  #   transform = cv2.estimateRigidTransform(prev_reprojection, current_flow, True)
 
-    if transform is not None:
-      transform = np.append(transform, [[0, 0, 1]], axis=0)
+  #   if transform is not None:
+  #     transform = np.append(transform, [[0, 0, 1]], axis=0)
 
-    return transform
+  #   return transform
 
   def main(self):
     self.webcam.start()
     detector = dlib.get_frontal_face_detector()
 
     predictor = dlib.shape_predictor(SHAPE_PREDICTOR)
-
-    prev_frame = self.webcam.get_current_frame()
-    prev_reprojection = None
-    prev_transform = np.identity(3)
-    prev_shape = []
-    loop_count = 0
 
     # main loop
     while True:
@@ -85,53 +79,17 @@ class Glasses:
         blank_image = np.zeros((height,width,3), np.uint8)
         blank_image[:,0:width] = (255,255,255)
 
-        transform = None
-
-        # calculate optical flow with data from previous frame of feed
-        if prev_reprojection is not None:
-          transform = self.calculate_optical_flow(prev_frame, gray, prev_reprojection)
-
-          # print(transform)
-
         # face detection
         rect = detector(gray, 0)
 
         # if face detected
         if (len(rect) > 0):
-          reprojectdst = None
-          euler_angle = None
-          shape = None
+          shape_pred = predictor(gray, rect[0])
 
-          if transform is not None and prev_transform is not None:
-            transform = transform.dot(prev_transform)
+          # convert face landmarks to 2-tuple of (x, y) coords
+          shape = face_utils.shape_to_np(shape_pred)
 
-            if loop_count % RESET_FREQ == 0:
-              transform = np.identity(3)
-
-            prev_mean = np.mean(prev_transform)
-            current_mean = np.mean(transform)
-
-            if current_mean + 0.05 < prev_mean or current_mean - 0.05 > prev_mean:
-              print('init')
-              shape_pred = predictor(gray, rect[0])
-
-              # convert face landmarks to 2-tuple of (x, y) coords
-              shape = face_utils.shape_to_np(shape_pred)
-
-              reprojectdst, euler_angle = self.head_pose(shape)
-            else:
-              print('elsed')
-              reprojectdst = prev_reprojectdst
-              euler_angle = prev_euler_angle
-              shape = prev_shape
-
-          else:
-            shape_pred = predictor(gray, rect[0])
-
-            # convert face landmarks to 2-tuple of (x, y) coords
-            shape = face_utils.shape_to_np(shape_pred)
-
-            reprojectdst, euler_angle = self.head_pose(shape)
+          reprojectdst, euler_angle = self.head_pose(shape)
 
           # draw face landmark points
           for (x, y) in shape:
@@ -140,14 +98,6 @@ class Glasses:
           # draw edges of object one line at a time
           for start, end in self.line_pairs:
             cv2.line(image, reprojectdst[start], reprojectdst[end], (0, 255, 0))
-
-          # not sure if this is correct
-          prev_reprojection = np.array(shape).astype(np.float32)
-          prev_shape = shape
-          prev_transform = transform
-          prev_reprojectdst = reprojectdst
-          prev_euler_angle = euler_angle
-          loop_count += 1
 
           # print debug info about the euler angle to the opencv window
           self.text(cv2, image, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20))
