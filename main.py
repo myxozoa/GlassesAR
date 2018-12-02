@@ -1,13 +1,9 @@
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
-from imutils import face_utils
-import dlib
 import cv2
-import numpy as np
 from webcam import Webcam
 from solver import Solver
-from loaders import loadobj
 from PIL import Image
 from constants import *
 import sys
@@ -18,13 +14,18 @@ class Glasses:
     self.solver = Solver()
     self.webcam_background = None
 
-  def text(self, cv, image, txt, pos):
-    cv.putText(image, txt, pos, cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0), thickness=2)
+  def print_text(self, x, y, font, text, r, g , b):
+    glColor3d(r,g,b)
+    glWindowPos2f(x,y)
+    for ch in text :
+        glutBitmapCharacter(font , ctypes.c_int( ord(ch)))
+
+    glColor3d(1,1,1)
 
   def setupWindow(self):
     glutInit()
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
-    glutInitWindowSize(640, 480)
+    glutInitWindowSize(SIZE[1], SIZE[0])
     glutInitWindowPosition(100, 100)
     glutCreateWindow(APP_NAME)
 
@@ -65,11 +66,15 @@ class Glasses:
     glPushMatrix()
     glTranslatef(0.0,0.0,-10.0)
     glBegin(GL_QUADS)
-    glTexCoord2f(0.0, 1.0); glVertex3f(-4.0, -3.0, 0.0)
-    glTexCoord2f(1.0, 1.0); glVertex3f( 4.0, -3.0, 0.0)
-    glTexCoord2f(1.0, 0.0); glVertex3f( 4.0,  3.0, 0.0)
-    glTexCoord2f(0.0, 0.0); glVertex3f(-4.0,  3.0, 0.0)
-    glEnd( )
+    glTexCoord2f(0.0, 1.0)
+    glVertex3f(-4.0, -3.0, 0.0)
+    glTexCoord2f(1.0, 1.0)
+    glVertex3f( 4.0, -3.0, 0.0)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3f( 4.0,  3.0, 0.0)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3f(-4.0,  3.0, 0.0)
+    glEnd()
     glPopMatrix()
 
   def draw(self):
@@ -79,6 +84,8 @@ class Glasses:
     image = self.webcam.get_current_frame()
 
     self.draw_webcam(image)
+
+    self.print_text(10 , 10 , GLUT_BITMAP_HELVETICA_18 , "Hello World" , 0.0 , 0.0 , 0.0)
 
     glutSwapBuffers()
 
