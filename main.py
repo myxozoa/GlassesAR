@@ -58,31 +58,33 @@ class Glasses:
 
     prev_frame = self.webcam.get_current_frame()
     prev_reprojection = None
+    prev_transform = np.identity(3)
 
+    # main loop
     while True:
       # grabbing images from the webcam and converting it into grayscale
         image = self.webcam.get_current_frame()
         height, width, channels = image.shape
 
+        # converting image to grayscale as required by algs
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # blank image for debug
         blank_image = np.zeros((height,width,3), np.uint8)
         blank_image[:,0:width] = (255,255,255)
 
+        # calculate optical flow with data from previous frame of feed
         if prev_reprojection is not None:
           current_flow, status, _ = cv2.calcOpticalFlowPyrLK(prev_frame, gray, prev_reprojection, np.array([]))
-          # prev_reprojection, current_flow = map(lambda flows: flows[status.ravel().astype(bool)], [prev_reprojection, current_flow])
-          # transform = cv2.estimateRigidTransform(prev_reprojection, current_flow, True)
+          prev_reprojection, current_flow = map(lambda flows: flows[status.ravel().astype(bool)], [prev_reprojection, current_flow])
+          transform = cv2.estimateRigidTransform(prev_reprojection, current_flow, True)
 
-          # if transform is not None:
-          #   transform = np.append(transform, [[0, 0, 1]], axis=0)
-          # if transform is None:
-          #   transform = transforms[-1]
+          if transform is not None:
+            transform = np.append(transform, [[0, 0, 1]], axis=0)
 
-          # print(transform)
+          print(transform)
 
-
+        # face detection
         rect = detector(gray, 0)
 
         # if face detected
@@ -97,9 +99,11 @@ class Glasses:
           # not sure if this is correct
           prev_reprojection = np.array(shape).astype(np.float32)
 
+          # draw face landmark points
           for (x, y) in shape:
             cv2.circle(image, (x, y), 2, (255, 0, 0), -1)
 
+          # draw edges of object one line at a time
           for start, end in self.line_pairs:
             cv2.line(image, reprojectdst[start], reprojectdst[end], (0, 255, 0))
 
