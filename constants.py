@@ -25,3 +25,5 @@ APP_NAME = "Glasses"
 MODEL = "teddy.obj"
 
 SHAPE_PREDICTOR = "shape_predictor_68_face_landmarks.dat"
+
+RESET_FREQ = 2
