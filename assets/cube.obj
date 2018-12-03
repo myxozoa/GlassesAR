@@ -1,5 +1,5 @@
 g Object
-mtllib cube_mtllib_after_g.mtl
+mtllib mat.mtl
 usemtl MyMaterial
 
 v  0.0  0.0  0.0

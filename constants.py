@@ -22,7 +22,7 @@ DEFAULT_K = [[FOCAL_LENGTH, 0, CENTER[0]],
 
 APP_NAME = b"GlassesAR"
 
-MODEL = "./assets/cube_mtllib_after_g.obj"
+MODEL = "./assets/cube.obj"
 
 SHAPE_PREDICTOR = "shape_predictor_68_face_landmarks.dat"
 

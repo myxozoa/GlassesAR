@@ -16,7 +16,7 @@ class Glasses:
     self.webcam_background = None
     self.rotate_y = 0.0
     self.rotate_x = 0.0
-    self.scale = 0.2
+    self.scale = 1.0
     self.prev_position = None
 
   def print_text(self, x, y, font, text, r, g , b):
@@ -110,7 +110,7 @@ class Glasses:
         self.rotate_x -= 5
     glutPostRedisplay()
 
-  def scale_range (self, input, min, max):
+  def scale_range(self, input, min, max):
     input += 0 #min
     input /= 10 / (max - min) #10 is max
     input += min
@@ -127,7 +127,6 @@ class Glasses:
     self.draw_webcam(image)
 
     translation_vec, euler_angle, shape, obj_data = self.solver.reproject(image)
-    # print(reprojectdst)
 
     if euler_angle is not None:
       # print(shape[34])
@@ -135,23 +134,20 @@ class Glasses:
       self.print_text(30, 70, GLUT_BITMAP_HELVETICA_18, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), 0.0, 0.0, 0.0)
       self.print_text(30, 100, GLUT_BITMAP_HELVETICA_18, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), 0.0, 0.0, 0.0)
 
-      glScalef(self.scale, self.scale, self.scale)
-
-      # if self.prev_position is not None:
-        # print(shape[34, 0] - self.prev_position[0])
-        # print(shape[34, 1] - self.prev_position[1])
-      # print(shape[34, 0]/100.0)
-      # print(shape[34, 1]/100.0)
-      # print(translation_vec)
       glLoadIdentity()
 
       # left -2.0, right 2.0
       # down -1.5, up 1.5
+      glScalef(self.scale, self.scale, self.scale)
 
+      # translation hack, figure out more scalable solution
       new_x = self.scale_range(-translation_vec[0], -2, 2)[0]
       new_y = self.scale_range(-translation_vec[1], -1.5, 1.5)[0]
       # print((new_x, new_y))
       glTranslatef(new_x * 0.2, (-new_y - 4) * 0.2, -5.0)
+
+      glTranslatef(0.05, 0.5, -1.0)
+
       # glTranslatef(0.0, 0.0, -5.0)
 
       # rotate with arrow keys
@@ -163,10 +159,10 @@ class Glasses:
       glRotatef(-euler_angle[2, 0], 0.0, 0.0, 1.0) # z rotate
       
       # debug cube
-      # glColor3d(1, 0, 1)
-      # glutSolidCube(1.0)
+      glColor3d(1, 0, 1)
+      glutSolidCube(1.0)
 
-      glCallList(obj_data.gl_list)
+      # glCallList(obj_data.gl_list)
 
       # reset draw color for further rendering
       glColor3d(1,1,1)
