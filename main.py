@@ -15,7 +15,7 @@ class Glasses:
     self.webcam_background = None
     self.rotate_y = 0.0
     self.rotate_x = 0.0
-    self.scale = 0.5
+    self.scale = 0.2
 
   def print_text(self, x, y, font, text, r, g , b):
     # set text color
@@ -52,7 +52,6 @@ class Glasses:
     gluPerspective(33.7, 1.3, 0.1, 100.0)
     glMatrixMode(GL_MODELVIEW)
 
-
     # start webcam thread
     self.webcam.start()
 
@@ -64,6 +63,8 @@ class Glasses:
     self.webcam_background = glGenTextures(1)
 
   def draw_webcam(self, image):
+    glEnable(GL_TEXTURE_2D)
+
     # convert image to opengl tex format
     bg_image = cv2.flip(image, 0)
     bg_image = Image.fromarray(bg_image)
@@ -93,6 +94,9 @@ class Glasses:
     glEnd()
     glPopMatrix()
 
+    glDisable(GL_TEXTURE_2D)
+
+
   def special(self, key, x, y):
     # Rotate cube according to keys pressed
     if key == GLUT_KEY_RIGHT:
@@ -109,7 +113,7 @@ class Glasses:
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
 
-    gluLookAt(0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+    gluLookAt(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
 
     image = self.webcam.get_current_frame()
 
@@ -124,11 +128,18 @@ class Glasses:
       self.print_text(10, 70, GLUT_BITMAP_HELVETICA_18, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), 0.0, 0.0, 0.0)
 
       glScalef(self.scale, self.scale, self.scale)
-      glRotatef(self.rotate_x, 1.0, 0.0, 0.0)
-      glRotatef(self.rotate_y, 0.0, 1.0, 0.0)
+      # glRotatef(self.rotate_x, 1.0, 0.0, 0.0)
+      # glRotatef(self.rotate_y, 0.0, 1.0, 0.0)
+
+      glRotatef(euler_angle[0, 0], 1.0, 0.0, 0.0) # x rotate
+      glRotatef(-euler_angle[1, 0], 0.0, 1.0, 0.0) # y rotate
+      glRotatef(-euler_angle[2, 0], 0.0, 0.0, 1.0) # z rotate
+
       glutSolidCube(1.0)
       # glCallList(obj_data.gl_list)
-    
+
+      # reset draw color for further rendering
+      glColor3d(1,1,1)
 
     glutSwapBuffers()
 
