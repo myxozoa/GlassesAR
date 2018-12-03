@@ -13,6 +13,9 @@ class Glasses:
     self.webcam = Webcam()
     self.solver = None
     self.webcam_background = None
+    self.rotate_y = 0.0
+    self.rotate_x = 0.0
+    self.scale = 0.5
 
   def print_text(self, x, y, font, text, r, g , b):
     # set text color
@@ -20,7 +23,7 @@ class Glasses:
     glWindowPos2f(x,y)
 
     for ch in text :
-        glutBitmapCharacter(font, ctypes.c_int(ord(ch)))
+      glutBitmapCharacter(font, ctypes.c_int(ord(ch)))
 
     # reset draw color for further rendering
     glColor3d(1,1,1)
@@ -35,6 +38,12 @@ class Glasses:
   def setup_gl(self):
     glClearColor(0.0, 0.0, 0.0, 0.0)
     glClearDepth(1.0)
+    glLightfv(GL_LIGHT0, GL_POSITION,  (-40, 200, 100, 0.0))
+    glLightfv(GL_LIGHT0, GL_AMBIENT, (0.2, 0.2, 0.2, 1.0))
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, (0.5, 0.5, 0.5, 1.0))
+    glEnable(GL_LIGHT0)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_COLOR_MATERIAL)
     glDepthFunc(GL_LESS)
     glEnable(GL_DEPTH_TEST)
     glShadeModel(GL_SMOOTH)
@@ -42,6 +51,7 @@ class Glasses:
     glLoadIdentity()
     gluPerspective(33.7, 1.3, 0.1, 100.0)
     glMatrixMode(GL_MODELVIEW)
+
 
     # start webcam thread
     self.webcam.start()
@@ -83,28 +93,51 @@ class Glasses:
     glEnd()
     glPopMatrix()
 
+  def special(self, key, x, y):
+    # Rotate cube according to keys pressed
+    if key == GLUT_KEY_RIGHT:
+        self.rotate_y += 5
+    if key == GLUT_KEY_LEFT:
+        self.rotate_y -= 5
+    if key == GLUT_KEY_UP:
+        self.rotate_x += 5
+    if key == GLUT_KEY_DOWN:
+        self.rotate_x -= 5
+    glutPostRedisplay()
+
   def draw(self):
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
+
+    gluLookAt(0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
 
     image = self.webcam.get_current_frame()
 
     self.draw_webcam(image)
 
-    reprojectdst, euler_angle, shape = self.solver.reproject(image)
+    reprojectdst, euler_angle, shape, obj_data = self.solver.reproject(image)
+    # print(reprojectdst)
 
     if euler_angle is not None:
       self.print_text(10, 10, GLUT_BITMAP_HELVETICA_18, "X: " + "{:7.2f}".format(euler_angle[0, 0]), 0.0, 0.0, 0.0)
       self.print_text(10, 40, GLUT_BITMAP_HELVETICA_18, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), 0.0, 0.0, 0.0)
       self.print_text(10, 70, GLUT_BITMAP_HELVETICA_18, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), 0.0, 0.0, 0.0)
 
-    glutSwapBuffers()
+      glScalef(self.scale, self.scale, self.scale)
+      glRotatef(self.rotate_x, 1.0, 0.0, 0.0)
+      glRotatef(self.rotate_y, 0.0, 1.0, 0.0)
+      glutSolidCube(1.0)
+      # glCallList(obj_data.gl_list)
+    
 
+    glutSwapBuffers()
 
   def main(self):
     self.setupWindow()
     glutDisplayFunc(self.draw)
     glutIdleFunc(self.draw)
+    # The callback function for keyboard controls
+    glutSpecialFunc(self.special)
     self.setup_gl()
     glutMainLoop()
     

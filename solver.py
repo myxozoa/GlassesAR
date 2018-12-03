@@ -79,6 +79,6 @@ class Solver:
       shape = face_utils.shape_to_np(shape_pred)
 
       reprojectdst, euler_angle = self.head_pose(shape)
-      return reprojectdst, euler_angle, shape
+      return reprojectdst, euler_angle, shape, self.obj_data
 
-    return None, None, None
+    return None, None, None, None
