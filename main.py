@@ -11,15 +11,18 @@ import sys
 class Glasses:
   def __init__(self):
     self.webcam = Webcam()
-    self.solver = Solver()
+    self.solver = None
     self.webcam_background = None
 
   def print_text(self, x, y, font, text, r, g , b):
+    # set text color
     glColor3d(r,g,b)
     glWindowPos2f(x,y)
-    for ch in text :
-        glutBitmapCharacter(font , ctypes.c_int( ord(ch)))
 
+    for ch in text :
+        glutBitmapCharacter(font, ctypes.c_int(ord(ch)))
+
+    # reset draw color for further rendering
     glColor3d(1,1,1)
 
   def setupWindow(self):
@@ -43,6 +46,9 @@ class Glasses:
     # start webcam thread
     self.webcam.start()
 
+    # initializing solver after opengl context is created
+    self.solver = Solver()
+
     # assign texture
     glEnable(GL_TEXTURE_2D)
     self.webcam_background = glGenTextures(1)
@@ -64,16 +70,16 @@ class Glasses:
     # draw bg
     glBindTexture(GL_TEXTURE_2D, self.webcam_background)
     glPushMatrix()
-    glTranslatef(0.0,0.0,-10.0)
+    glTranslatef(0.0, 0.0, -10.0)
     glBegin(GL_QUADS)
     glTexCoord2f(0.0, 1.0)
     glVertex3f(-4.0, -3.0, 0.0)
     glTexCoord2f(1.0, 1.0)
     glVertex3f( 4.0, -3.0, 0.0)
     glTexCoord2f(1.0, 0.0)
-    glVertex3f( 4.0,  3.0, 0.0)
+    glVertex3f( 4.0, 3.0, 0.0)
     glTexCoord2f(0.0, 0.0)
-    glVertex3f(-4.0,  3.0, 0.0)
+    glVertex3f(-4.0, 3.0, 0.0)
     glEnd()
     glPopMatrix()
 
@@ -85,7 +91,12 @@ class Glasses:
 
     self.draw_webcam(image)
 
-    self.print_text(10 , 10 , GLUT_BITMAP_HELVETICA_18 , "Hello World" , 0.0 , 0.0 , 0.0)
+    reprojectdst, euler_angle, shape = self.solver.reproject(image)
+
+    if euler_angle is not None:
+      self.print_text(10, 10, GLUT_BITMAP_HELVETICA_18, "X: " + "{:7.2f}".format(euler_angle[0, 0]), 0.0, 0.0, 0.0)
+      self.print_text(10, 40, GLUT_BITMAP_HELVETICA_18, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), 0.0, 0.0, 0.0)
+      self.print_text(10, 70, GLUT_BITMAP_HELVETICA_18, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), 0.0, 0.0, 0.0)
 
     glutSwapBuffers()
 
@@ -114,9 +125,9 @@ class Glasses:
         #     cv2.line(image, reprojectdst[start], reprojectdst[end], (0, 255, 0))
 
         #   # print debug info about the euler angle to the opencv window
-        #   self.text(cv2, image, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20))
-        #   self.text(cv2, image, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50))
-        #   self.text(cv2, image, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80))
+          # self.text(cv2, image, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20))
+          # self.text(cv2, image, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50))
+          # self.text(cv2, image, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80))
 
         # # output image to opencv window
         # cv2.imshow(APP_NAME, image)

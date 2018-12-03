@@ -3,7 +3,7 @@ import dlib
 import cv2
 import numpy as np
 from webcam import Webcam
-from loaders import loadobj
+from loaders import load_OBJ
 from constants import *
 
 class Solver:
@@ -19,11 +19,11 @@ class Solver:
     # head points estimation
     self.object_pts = np.float32(HEAD_PTS)
 
-    self.obj_data = loadobj(MODEL)
+    self.obj_data = load_OBJ(MODEL)
 
-    self.reprojectsrc = np.float32(self.obj_data[0])
+    self.reprojectsrc = np.float32(self.obj_data.vertices)
 
-    self.line_pairs = self.obj_data[1]
+    # self.line_pairs = self.obj_data[1]
 
     self.detector = dlib.get_frontal_face_detector()
 
