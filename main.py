@@ -2,6 +2,7 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 import cv2
+import numpy as np
 from webcam import Webcam
 from solver import Solver
 from PIL import Image
@@ -16,6 +17,7 @@ class Glasses:
     self.rotate_y = 0.0
     self.rotate_x = 0.0
     self.scale = 0.2
+    self.prev_position = None
 
   def print_text(self, x, y, font, text, r, g , b):
     # set text color
@@ -96,7 +98,6 @@ class Glasses:
 
     glDisable(GL_TEXTURE_2D)
 
-
   def special(self, key, x, y):
     # Rotate cube according to keys pressed
     if key == GLUT_KEY_RIGHT:
@@ -109,6 +110,12 @@ class Glasses:
         self.rotate_x -= 5
     glutPostRedisplay()
 
+  def scale_range (self, input, min, max):
+    input += 0 #min
+    input /= 10 / (max - min) #10 is max
+    input += min
+    return input
+
   def draw(self):
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
@@ -119,27 +126,52 @@ class Glasses:
 
     self.draw_webcam(image)
 
-    reprojectdst, euler_angle, shape, obj_data = self.solver.reproject(image)
+    translation_vec, euler_angle, shape, obj_data = self.solver.reproject(image)
     # print(reprojectdst)
 
     if euler_angle is not None:
-      self.print_text(10, 10, GLUT_BITMAP_HELVETICA_18, "X: " + "{:7.2f}".format(euler_angle[0, 0]), 0.0, 0.0, 0.0)
-      self.print_text(10, 40, GLUT_BITMAP_HELVETICA_18, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), 0.0, 0.0, 0.0)
-      self.print_text(10, 70, GLUT_BITMAP_HELVETICA_18, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), 0.0, 0.0, 0.0)
+      # print(shape[34])
+      self.print_text(30, 40, GLUT_BITMAP_HELVETICA_18, "X: " + "{:7.2f}".format(euler_angle[0, 0]), 0.0, 0.0, 0.0)
+      self.print_text(30, 70, GLUT_BITMAP_HELVETICA_18, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), 0.0, 0.0, 0.0)
+      self.print_text(30, 100, GLUT_BITMAP_HELVETICA_18, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), 0.0, 0.0, 0.0)
 
       glScalef(self.scale, self.scale, self.scale)
+
+      # if self.prev_position is not None:
+        # print(shape[34, 0] - self.prev_position[0])
+        # print(shape[34, 1] - self.prev_position[1])
+      # print(shape[34, 0]/100.0)
+      # print(shape[34, 1]/100.0)
+      # print(translation_vec)
+      glLoadIdentity()
+
+      # left -2.0, right 2.0
+      # down -1.5, up 1.5
+
+      new_x = self.scale_range(-translation_vec[0], -2, 2)[0]
+      new_y = self.scale_range(-translation_vec[1], -1.5, 1.5)[0]
+      # print((new_x, new_y))
+      glTranslatef(new_x * 0.2, (-new_y - 4) * 0.2, -5.0)
+      # glTranslatef(0.0, 0.0, -5.0)
+
+      # rotate with arrow keys
       # glRotatef(self.rotate_x, 1.0, 0.0, 0.0)
       # glRotatef(self.rotate_y, 0.0, 1.0, 0.0)
 
       glRotatef(euler_angle[0, 0], 1.0, 0.0, 0.0) # x rotate
       glRotatef(-euler_angle[1, 0], 0.0, 1.0, 0.0) # y rotate
       glRotatef(-euler_angle[2, 0], 0.0, 0.0, 1.0) # z rotate
+      
+      # debug cube
+      # glColor3d(1, 0, 1)
+      # glutSolidCube(1.0)
 
-      glutSolidCube(1.0)
-      # glCallList(obj_data.gl_list)
+      glCallList(obj_data.gl_list)
 
       # reset draw color for further rendering
       glColor3d(1,1,1)
+
+      # self.prev_position = shape[34]
 
     glutSwapBuffers()
 

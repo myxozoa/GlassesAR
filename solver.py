@@ -46,7 +46,7 @@ class Solver:
     pose_mat = cv2.hconcat((rotation_mat, translation_vec))
     _, _, _, _, _, _, euler_angle = cv2.decomposeProjectionMatrix(pose_mat)
 
-    return reprojectdst, euler_angle
+    return translation_vec, euler_angle
 
   # def calculate_optical_flow(self, prev_frame, gray, prev_reprojection):
   #   current_flow, status, _ = cv2.calcOpticalFlowPyrLK(prev_frame, gray, prev_reprojection, np.array([]))
