@@ -1,108 +1,183 @@
-from imutils import face_utils
-import dlib
+from OpenGL.GL import *
+from OpenGL.GLUT import *
+from OpenGL.GLU import *
 import cv2
 import numpy as np
 from webcam import Webcam
-from loaders import loadobj
+from solver import Solver
+from PIL import Image
 from constants import *
 import sys
 
 class Glasses:
   def __init__(self):
-    self.K = np.array(DEFAULT_K, dtype = "double")
-
-    # this is assuming zero lens distortion, unrealistic but good enough for now
-    self.D = np.zeros((5, 1))
-
-    self.cam_matrix = np.array(self.K).reshape(3, 3).astype(np.float32)
-    self.dist_coeffs = np.array(self.D).reshape(5, 1).astype(np.float32)
-
-    # head points estimation
-    self.object_pts = np.float32(HEAD_PTS)
-
-    self.obj_data = loadobj("teddy.obj")
-
-    self.reprojectsrc = np.float32(self.obj_data[0])
-
-    self.line_pairs = self.obj_data[1]
-
+    self.INVERSE_MATRIX = np.array(INVERSE_MATRIX)
     self.webcam = Webcam()
+    self.solver = None
+    self.webcam_background = None
+    self.rotate_y = 0.0
+    self.rotate_x = 0.0
+    self.scale = 5.0
+    self.prev_position = None
 
-  def head_pose(self, shape):
-    image_pts = np.float32([shape[17], shape[21], shape[22], shape[26], shape[36],
-                            shape[39], shape[42], shape[45], shape[31], shape[35],
-                            shape[48], shape[54], shape[57], shape[8]])
+  def print_text(self, x, y, font, text, r, g , b):
+    # set text color
+    glColor3d(r,g,b)
+    glWindowPos2f(x,y)
 
-    _, rotation_vec, translation_vec = cv2.solvePnP(self.object_pts, image_pts, self.cam_matrix, self.dist_coeffs)
+    for ch in text :
+      glutBitmapCharacter(font, ctypes.c_int(ord(ch)))
 
-    reprojectdst, _ = cv2.projectPoints(self.reprojectsrc, rotation_vec, translation_vec, self.cam_matrix,
-                                        self.dist_coeffs)
+    # reset draw color for further rendering
+    glColor3d(1,1,1)
 
-    reprojectdst = tuple(map(tuple, reprojectdst.reshape(-1, 2)))
+  def setupWindow(self):
+    glutInit()
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
+    glutInitWindowSize(SIZE[1], SIZE[0])
+    glutInitWindowPosition(100, 100)
+    glutCreateWindow(APP_NAME)
 
-    # calc euler angle
-    rotation_mat, _ = cv2.Rodrigues(rotation_vec)
-    pose_mat = cv2.hconcat((rotation_mat, translation_vec))
-    _, _, _, _, _, _, euler_angle = cv2.decomposeProjectionMatrix(pose_mat)
+  def setup_gl(self):
+    glClearColor(0.0, 0.0, 0.0, 0.0)
+    glClearDepth(1.0)
+    glLightfv(GL_LIGHT0, GL_POSITION,  (-40, 200, 100, 0.0))
+    glLightfv(GL_LIGHT0, GL_AMBIENT, (0.2, 0.2, 0.2, 1.0))
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, (0.5, 0.5, 0.5, 1.0))
+    glEnable(GL_LIGHT0)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_COLOR_MATERIAL)
+    glDepthFunc(GL_LESS)
+    glEnable(GL_DEPTH_TEST)
+    glShadeModel(GL_SMOOTH)
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    gluPerspective(33.7, 1.3, 0.1, 1000.0)
+    glMatrixMode(GL_MODELVIEW)
 
-    return reprojectdst, euler_angle
+    # start webcam thread
+    self.webcam.start()
 
-  def text(self, cv, image, txt, pos):
-    cv.putText(image, txt, pos, cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0), thickness=2)
+    # initializing solver after opengl context is created
+    self.solver = Solver(self.webcam.camera_matrix, self.webcam.dist_coeffs)
+
+    # assign texture
+    glEnable(GL_TEXTURE_2D)
+    self.webcam_background = glGenTextures(1)
+
+  def draw_webcam(self, image):
+    glEnable(GL_TEXTURE_2D)
+
+    # convert image to opengl tex format
+    bg_image = cv2.flip(image, 0)
+    bg_image = Image.fromarray(bg_image)
+    ix = bg_image.size[0]
+    iy = bg_image.size[1]
+    bg_image = bg_image.tobytes('raw', 'BGRX', 0, -1)
+
+    # create bg texture
+    glBindTexture(GL_TEXTURE_2D, self.webcam_background)
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, ix, iy, 0, GL_RGBA, GL_UNSIGNED_BYTE, bg_image)
+
+    # draw bg
+    glBindTexture(GL_TEXTURE_2D, self.webcam_background)
+    glPushMatrix()
+    glTranslatef(0.0, 0.0, -100.0)
+    glBegin(GL_QUADS)
+    glTexCoord2f(0.0, 1.0)
+    glVertex3f(-40.0, -30.0, 0.0)
+    glTexCoord2f(1.0, 1.0)
+    glVertex3f( 40.0, -30.0, 0.0)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3f( 40.0, 30.0, 0.0)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3f(-40.0, 30.0, 0.0)
+    glEnd()
+    glPopMatrix()
+
+    glDisable(GL_TEXTURE_2D)
+
+  def special(self, key, x, y):
+    # Rotate cube according to keys pressed
+    if key == GLUT_KEY_RIGHT:
+        self.rotate_y += 5
+    if key == GLUT_KEY_LEFT:
+        self.rotate_y -= 5
+    if key == GLUT_KEY_UP:
+        self.rotate_x += 5
+    if key == GLUT_KEY_DOWN:
+        self.rotate_x -= 5
+    glutPostRedisplay()
+
+  def draw(self):
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glLoadIdentity()
+
+    gluLookAt(0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+
+    image = self.webcam.get_current_frame()
+
+    self.draw_webcam(image)
+
+    translation_vec, euler_angle, obj_data, rotation_vec = self.solver.reproject(image)
+
+    if translation_vec is not None:
+      # self.print_text(30, 40, GLUT_BITMAP_HELVETICA_18, "X: " + "{:7.2f}".format(euler_angle[0, 0]), 0.0, 0.0, 0.0)
+      # self.print_text(30, 70, GLUT_BITMAP_HELVETICA_18, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), 0.0, 0.0, 0.0)
+      # self.print_text(30, 100, GLUT_BITMAP_HELVETICA_18, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), 0.0, 0.0, 0.0)
+
+
+      glTranslatef(0.0, 0.0, 0.0)
+
+      # calculate view matrix
+      rmtx = cv2.Rodrigues(rotation_vec)[0]
+
+      view_matrix = np.array([[-rmtx[0][0],-rmtx[0][1],-rmtx[0][2],-translation_vec[0]],
+                              [-rmtx[1][0],-rmtx[1][1],-rmtx[1][2],-translation_vec[1]],
+                              [-rmtx[2][0],-rmtx[2][1],-rmtx[2][2],-translation_vec[2]],
+                              [0.0       ,0.0       ,0.0       ,1.0    ]])
+
+      view_matrix *= self.INVERSE_MATRIX
+      transp_view_matrix = np.transpose(view_matrix)
+
+      glPushMatrix()
+      glLoadMatrixf(transp_view_matrix)
+
+      glScalef(self.scale, self.scale, self.scale)
+
+      # rotate with arrow keys
+      # glRotatef(self.rotate_x, 1.0, 0.0, 0.0)
+      # glRotatef(self.rotate_y, 0.0, 1.0, 0.0)
+
+      # glRotatef(euler_angle[0, 0], 1.0, 0.0, 0.0) # x rotate
+      # glRotatef(-euler_angle[1, 0], 0.0, 1.0, 0.0) # y rotate
+      # glRotatef(-euler_angle[2, 0], 0.0, 0.0, 1.0) # z rotate
+
+      # debug cube
+      glColor3d(1, 0, 1)
+      glutSolidCube(1.0)
+
+      # render obj
+      glCallList(obj_data.gl_list)
+
+      # reset draw color for further rendering
+      glColor3d(1,1,1)
+      glPopMatrix()
+    else:
+      print('face not found')
+
+    glutSwapBuffers()
 
   def main(self):
-    self.webcam.start()
-    detector = dlib.get_frontal_face_detector()
-
-    predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
-
-    while True:
-      # grabbing images from the webcam and converting it into grayscale
-        image = self.webcam.get_current_frame()
-        height, width, channels = image.shape
-
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        blank_image = np.zeros((height,width,3), np.uint8)
-
-        blank_image[:,0:width] = (255,255,255)
-
-        # show the gray image
-
-        rect = detector(gray, 0)
-
-        if (len(rect) > 0):
-          shape_pred = predictor(gray, rect[0])
-
-          # convert face landmarks to 2-tuple of (x, y) coords
-          shape = face_utils.shape_to_np(shape_pred)
-
-          reprojectdst, euler_angle = self.head_pose(shape)
-
-
-          # print(len(reprojectdst))
-
-          # for (x, y) in shape:
-          #   cv2.circle(image, (x, y), 2, (255, 0, 0), -1)
-
-          for start, end in self.line_pairs:
-            # print(start, end)
-            cv2.line(image, reprojectdst[start], reprojectdst[end], (0, 255, 0))
-
-          # self.text(cv2, image, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20))
-          # self.text(cv2, image, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50))
-          # self.text(cv2, image, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80))
-
-
-        cv2.imshow("Output", image)
-
-        # close app with esc key
-        k = cv2.waitKey(5) & 0xFF
-        if k == 27:
-            break
-
-    cv2.destroyAllWindows()
-    self.webcam.release()
-    sys.exit()
+    self.setupWindow()
+    glutDisplayFunc(self.draw)
+    glutIdleFunc(self.draw)
+    # The callback function for keyboard controls
+    # glutSpecialFunc(self.special)
+    self.setup_gl()
+    glutMainLoop()
 
 def main():
   prog = Glasses()
