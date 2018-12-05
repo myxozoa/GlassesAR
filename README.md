@@ -13,3 +13,4 @@ A proof of concept app for virtually (AR) trying on glasses before purchasing
 ## TODO:
   - Refactor to Modern OpenGL
   - PBR Rendering
+  - Model selection
