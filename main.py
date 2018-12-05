@@ -148,15 +148,14 @@ class Glasses:
       glScalef(self.scale, self.scale, self.scale)
 
       # rotate with arrow keys
-      # glRotatef(self.rotate_x, 1.0, 0.0, 0.0)
-      # glRotatef(self.rotate_y, 0.0, 1.0, 0.0)
-
-      # glRotatef(euler_angle[0, 0], 1.0, 0.0, 0.0) # x rotate
-      # glRotatef(-euler_angle[1, 0], 0.0, 1.0, 0.0) # y rotate
-      # glRotatef(-euler_angle[2, 0], 0.0, 0.0, 1.0) # z rotate
+      glRotatef(self.rotate_x, 1.0, 0.0, 0.0)
+      glRotatef(self.rotate_y, 0.0, 1.0, 0.0)
 
       # debug cube
       glColor3d(1, 0, 1)
+
+      # move to bridge of nose
+      glTranslatef(0.0, 1.0, 1.5)
       glutSolidCube(1.0)
 
       # render obj
@@ -175,7 +174,7 @@ class Glasses:
     glutDisplayFunc(self.draw)
     glutIdleFunc(self.draw)
     # The callback function for keyboard controls
-    # glutSpecialFunc(self.special)
+    glutSpecialFunc(self.special)
     self.setup_gl()
     glutMainLoop()
 
