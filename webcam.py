@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 from threading import Thread
 
 class Webcam:
@@ -7,6 +8,11 @@ class Webcam:
     self.feed.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     self.feed.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
     self.current_frame = self.feed.read()[1]
+
+    with np.load('webcam_calibration.npz') as calib:
+      self.camera_matrix, self.dist_coeffs = [calib[i] for i in ('mtx','dist')]
+    
+
 
   def start(self):
     t = Thread(target=self.update_frame, args=())

@@ -7,14 +7,14 @@ from loaders import load_OBJ
 from constants import *
 
 class Solver:
-  def __init__(self):
+  def __init__(self, cam_matrix, dist_coeffs):
     self.K = np.array(DEFAULT_K, dtype = "double")
 
     # this is assuming zero lens distortion, unrealistic but good enough for now
     self.D = np.zeros((5, 1))
 
-    self.cam_matrix = np.array(self.K).reshape(3, 3).astype(np.float32)
-    self.dist_coeffs = np.array(self.D).reshape(5, 1).astype(np.float32)
+    self.cam_matrix = cam_matrix
+    self.dist_coeffs = dist_coeffs
 
     # head points estimation
     self.object_pts = np.float32(HEAD_PTS)
@@ -35,18 +35,20 @@ class Solver:
                             shape[48], shape[54], shape[57], shape[8]])
 
     _, rotation_vec, translation_vec = cv2.solvePnP(self.object_pts, image_pts, self.cam_matrix, self.dist_coeffs)
+    # _, rotation_vec, translation_vec, _ = cv2.solvePnPRansac(self.object_pts, image_pts, self.cam_matrix, self.dist_coeffs)
 
-    reprojectdst, _ = cv2.projectPoints(self.reprojectsrc, rotation_vec, translation_vec, self.cam_matrix,
-                                        self.dist_coeffs)
 
-    reprojectdst = tuple(map(tuple, reprojectdst.reshape(-1, 2)))
+    # reprojectdst, _ = cv2.projectPoints(self.reprojectsrc, rotation_vec, translation_vec, self.cam_matrix,
+    #                                     self.dist_coeffs)
 
-    # calc euler angle
-    rotation_mat, _ = cv2.Rodrigues(rotation_vec)
-    pose_mat = cv2.hconcat((rotation_mat, translation_vec))
-    _, _, _, _, _, _, euler_angle = cv2.decomposeProjectionMatrix(pose_mat)
+    # reprojectdst = tuple(map(tuple, reprojectdst.reshape(-1, 2)))
 
-    return translation_vec, euler_angle
+    # # calc euler angle
+    # rotation_mat, _ = cv2.Rodrigues(rotation_vec)
+    # pose_mat = cv2.hconcat((rotation_mat, translation_vec))
+    # _, _, _, _, _, _, euler_angle = cv2.decomposeProjectionMatrix(pose_mat)
+
+    return translation_vec, 'euler_angle', rotation_vec
 
   # def calculate_optical_flow(self, prev_frame, gray, prev_reprojection):
   #   current_flow, status, _ = cv2.calcOpticalFlowPyrLK(prev_frame, gray, prev_reprojection, np.array([]))
@@ -59,14 +61,14 @@ class Solver:
   #   return transform
 
   def reproject(self, image):
-    height, width, channels = image.shape
+    height, width, _ = image.shape
 
     # converting image to grayscale as required by algs
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # blank image for debug
-    blank_image = np.zeros((height,width,3), np.uint8)
-    blank_image[:,0:width] = (255,255,255)
+    # blank_image = np.zeros((height,width,3), np.uint8)
+    # blank_image[:,0:width] = (255,255,255)
 
     # face detection
     rect = self.detector(gray, 0)
@@ -78,7 +80,7 @@ class Solver:
       # convert face landmarks to 2-tuple of (x, y) coords
       shape = face_utils.shape_to_np(shape_pred)
 
-      reprojectdst, euler_angle = self.head_pose(shape)
-      return reprojectdst, euler_angle, shape, self.obj_data
+      translation_vec, euler_angle, rotation_vec = self.head_pose(shape)
+      return translation_vec, euler_angle, self.obj_data, rotation_vec
 
     return None, None, None, None
