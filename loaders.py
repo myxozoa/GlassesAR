@@ -80,6 +80,7 @@ class load_OBJ:
       self.gl_list = glGenLists(1)
       glNewList(self.gl_list, GL_COMPILE)
       glEnable(GL_TEXTURE_2D)
+      glMaterial(GL_FRONT, GL_SPECULAR, (1.0, 1.0, 1.0, 1.0))
       glFrontFace(GL_CCW)
       for face in self.faces:
         vertices, normals, texture_coords, material = face

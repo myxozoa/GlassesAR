@@ -17,7 +17,7 @@ class Glasses:
     self.webcam_background = None
     self.rotate_y = 0.0
     self.rotate_x = 0.0
-    self.scale = 5.0
+    self.scale = 10.0
     self.prev_position = None
 
   def print_text(self, x, y, font, text, r, g , b):
@@ -44,6 +44,7 @@ class Glasses:
     glLightfv(GL_LIGHT0, GL_POSITION,  (-40, 200, 100, 0.0))
     glLightfv(GL_LIGHT0, GL_AMBIENT, (0.2, 0.2, 0.2, 1.0))
     glLightfv(GL_LIGHT0, GL_DIFFUSE, (0.5, 0.5, 0.5, 1.0))
+    glLightfv(GL_LIGHT0, GL_SPECULAR, (0.5, 0.5, 0.5, 1.0))
     glEnable(GL_LIGHT0)
     glEnable(GL_LIGHTING)
     glEnable(GL_COLOR_MATERIAL)
@@ -128,16 +129,13 @@ class Glasses:
       # self.print_text(30, 70, GLUT_BITMAP_HELVETICA_18, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), 0.0, 0.0, 0.0)
       # self.print_text(30, 100, GLUT_BITMAP_HELVETICA_18, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), 0.0, 0.0, 0.0)
 
-
-      glTranslatef(0.0, 0.0, 0.0)
-
       # calculate view matrix
       rmtx = cv2.Rodrigues(rotation_vec)[0]
 
-      view_matrix = np.array([[-rmtx[0][0],-rmtx[0][1],-rmtx[0][2],-translation_vec[0]],
-                              [-rmtx[1][0],-rmtx[1][1],-rmtx[1][2],-translation_vec[1]],
-                              [-rmtx[2][0],-rmtx[2][1],-rmtx[2][2],-translation_vec[2]],
-                              [0.0       ,0.0       ,0.0       ,1.0    ]])
+      view_matrix = np.array([[-rmtx[0][0], -rmtx[0][1], -rmtx[0][2], -translation_vec[0]],
+                              [-rmtx[1][0], -rmtx[1][1], -rmtx[1][2], -translation_vec[1]],
+                              [-rmtx[2][0], -rmtx[2][1], -rmtx[2][2], -translation_vec[2]],
+                              [0.0, 0.0, 0.0, 1.0]])
 
       view_matrix *= self.INVERSE_MATRIX
       transp_view_matrix = np.transpose(view_matrix)
@@ -152,11 +150,12 @@ class Glasses:
       glRotatef(self.rotate_y, 0.0, 1.0, 0.0)
 
       # debug cube
-      glColor3d(1, 0, 1)
+      # glColor3d(1, 0, 1)
 
       # move to bridge of nose
-      glTranslatef(0.0, 1.0, 1.5)
-      glutSolidCube(1.0)
+      # glTranslatef(0.0, 1.0, 1.5)
+
+      glTranslatef(0.0, 0.0 , 0.0)
 
       # render obj
       glCallList(obj_data.gl_list)
