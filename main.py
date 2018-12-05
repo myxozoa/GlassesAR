@@ -17,8 +17,7 @@ class Glasses:
     self.webcam_background = None
     self.rotate_y = 0.0
     self.rotate_x = 0.0
-    self.scale = 10.0
-    self.prev_position = None
+    self.scale = 8.0
 
   def print_text(self, x, y, font, text, r, g , b):
     # set text color
@@ -155,7 +154,7 @@ class Glasses:
       # move to bridge of nose
       # glTranslatef(0.0, 1.0, 1.5)
 
-      glTranslatef(0.0, 0.0 , 0.0)
+      glTranslatef(0.0, 0.2 , 0.0)
 
       # render obj
       glCallList(obj_data.gl_list)

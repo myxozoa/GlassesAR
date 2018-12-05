@@ -9,3 +9,7 @@ A proof of concept app for virtually (AR) trying on glasses before purchasing
 
 ### OSX:
   - Must have Cmake installed
+
+## TODO:
+  - Refactor to Modern OpenGL
+  - PBR Rendering
