@@ -21,24 +21,7 @@ class Glasses:
     self.rotate_x = 0.0
     self.scale = 8.0
 
-  # def print_text(self, x, y, font, text, r, g , b):
-  #   # set text color
-  #   glColor3d(r,g,b)
-  #   glWindowPos2f(x,y)
-
-  #   for ch in text :
-  #     glutBitmapCharacter(font, ctypes.c_int(ord(ch)))
-
-  #   # reset draw color for further rendering
-  #   glColor3d(1,1,1)
-
   def setupWindow(self):
-    # glutInit()
-    # glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
-    # glutInitWindowSize(SIZE[1], SIZE[0])
-    # glutInitWindowPosition(100, 100)
-    # glutCreateWindow(APP_NAME)
-
     if not glfw.init():
       return
     
@@ -135,10 +118,6 @@ class Glasses:
     translation_vec, euler_angle, obj_data, rotation_vec = self.solver.reproject(image)
 
     if translation_vec is not None:
-      # self.print_text(30, 40, GLUT_BITMAP_HELVETICA_18, "X: " + "{:7.2f}".format(euler_angle[0, 0]), 0.0, 0.0, 0.0)
-      # self.print_text(30, 70, GLUT_BITMAP_HELVETICA_18, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), 0.0, 0.0, 0.0)
-      # self.print_text(30, 100, GLUT_BITMAP_HELVETICA_18, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), 0.0, 0.0, 0.0)
-
       # calculate view matrix
       rmtx = cv2.Rodrigues(rotation_vec)[0]
 
@@ -176,22 +155,17 @@ class Glasses:
     else:
       print('face not found')
 
-    # glutSwapBuffers()
     glfw.swap_buffers(self.window)
     glfw.poll_events()
 
 
   def main(self):
     self.setupWindow()
-    # glutDisplayFunc(self.draw)
-    # glutIdleFunc(self.draw)
-    # The callback function for keyboard controls
-    # glutSpecialFunc(self.special)
     self.setup_gl()
     glfw.set_key_callback(self.window, self.handle_keys)
+  
     while not glfw.window_should_close(self.window):
       self.draw()
-    # glutMainLoop()
 
     glfw.terminate()
 
