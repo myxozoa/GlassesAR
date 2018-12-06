@@ -116,13 +116,13 @@ def load_shaders(vertex_file_path, fragment_file_path):
     glCompileShader(vertex_shader)
     result = glGetShaderiv(vertex_shader, GL_COMPILE_STATUS)
     info_log = glGetShaderInfoLog(vertex_shader)
-    print result, info_log
+    print(result, info_log)
 
     glShaderSource(fragment_shader, fragment_shader_code)
     glCompileShader(fragment_shader)
     result = glGetShaderiv(fragment_shader, GL_COMPILE_STATUS)
     info_log = glGetShaderInfoLog(fragment_shader)
-    print result, info_log
+    print(result, info_log)
 
     program = glCreateProgram()
     glAttachShader(program, vertex_shader)
@@ -130,8 +130,10 @@ def load_shaders(vertex_file_path, fragment_file_path):
     glLinkProgram(program)
     result = glGetProgramiv(program, GL_LINK_STATUS)
     info_log = glGetProgramInfoLog(program)
-    print result, info_log
+    print(result, info_log)
 
+    glDetachShader(vertex_shader)
+    glDetachShader(fragment_shader)
     glDeleteShader(vertex_shader)
     glDeleteShader(fragment_shader)
     return program
