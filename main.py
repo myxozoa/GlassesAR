@@ -1,5 +1,6 @@
 from OpenGL.GL import *
-from OpenGL.GLUT import *
+# from OpenGL.GLUT import *
+import glfw
 from OpenGL.GLU import *
 import cv2
 import numpy as np
@@ -12,6 +13,7 @@ import sys
 class Glasses:
   def __init__(self):
     self.INVERSE_MATRIX = np.array(INVERSE_MATRIX)
+    self.window = None
     self.webcam = Webcam()
     self.solver = None
     self.webcam_background = None
@@ -19,23 +21,33 @@ class Glasses:
     self.rotate_x = 0.0
     self.scale = 8.0
 
-  def print_text(self, x, y, font, text, r, g , b):
-    # set text color
-    glColor3d(r,g,b)
-    glWindowPos2f(x,y)
+  # def print_text(self, x, y, font, text, r, g , b):
+  #   # set text color
+  #   glColor3d(r,g,b)
+  #   glWindowPos2f(x,y)
 
-    for ch in text :
-      glutBitmapCharacter(font, ctypes.c_int(ord(ch)))
+  #   for ch in text :
+  #     glutBitmapCharacter(font, ctypes.c_int(ord(ch)))
 
-    # reset draw color for further rendering
-    glColor3d(1,1,1)
+  #   # reset draw color for further rendering
+  #   glColor3d(1,1,1)
 
   def setupWindow(self):
-    glutInit()
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
-    glutInitWindowSize(SIZE[1], SIZE[0])
-    glutInitWindowPosition(100, 100)
-    glutCreateWindow(APP_NAME)
+    # glutInit()
+    # glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
+    # glutInitWindowSize(SIZE[1], SIZE[0])
+    # glutInitWindowPosition(100, 100)
+    # glutCreateWindow(APP_NAME)
+
+    if not glfw.init():
+      return
+    
+    self.window = glfw.create_window(SIZE[1], SIZE[0], APP_NAME, None, None)
+    if not self.window:
+      glfw.terminate()
+      return
+
+    glfw.make_context_current(self.window)
 
   def setup_gl(self):
     glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -165,16 +177,24 @@ class Glasses:
     else:
       print('face not found')
 
-    glutSwapBuffers()
+    # glutSwapBuffers()
+    glfw.swap_buffers(self.window)
+    glfw.poll_events()
+
 
   def main(self):
     self.setupWindow()
-    glutDisplayFunc(self.draw)
-    glutIdleFunc(self.draw)
+    # glutDisplayFunc(self.draw)
+    # glutIdleFunc(self.draw)
     # The callback function for keyboard controls
-    glutSpecialFunc(self.special)
+    # glutSpecialFunc(self.special)
     self.setup_gl()
-    glutMainLoop()
+
+    while not glfw.window_should_close(self.window):
+      self.draw()
+    # glutMainLoop()
+
+    glfw.terminate()
 
 def main():
   prog = Glasses()
