@@ -1,5 +1,6 @@
 from PIL import Image
 from OpenGL.GL import *
+
  
 def load_MTL(filename):
   contents = {}
@@ -102,3 +103,35 @@ class load_OBJ:
         glEnd()
       glDisable(GL_TEXTURE_2D)
       glEndList()
+
+def load_shaders(vertex_file_path, fragment_file_path):
+    vertex_shader = glCreateShader(GL_VERTEX_SHADER)
+    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER)
+    with open(vertex_file_path, "r") as f:
+        vertex_shader_code = f.read()
+    with open(fragment_file_path, "r") as f:
+        fragment_shader_code = f.read()
+
+    glShaderSource(vertex_shader, vertex_shader_code)
+    glCompileShader(vertex_shader)
+    result = glGetShaderiv(vertex_shader, GL_COMPILE_STATUS)
+    info_log = glGetShaderInfoLog(vertex_shader)
+    print result, info_log
+
+    glShaderSource(fragment_shader, fragment_shader_code)
+    glCompileShader(fragment_shader)
+    result = glGetShaderiv(fragment_shader, GL_COMPILE_STATUS)
+    info_log = glGetShaderInfoLog(fragment_shader)
+    print result, info_log
+
+    program = glCreateProgram()
+    glAttachShader(program, vertex_shader)
+    glAttachShader(program, fragment_shader)
+    glLinkProgram(program)
+    result = glGetProgramiv(program, GL_LINK_STATUS)
+    info_log = glGetProgramInfoLog(program)
+    print result, info_log
+
+    glDeleteShader(vertex_shader)
+    glDeleteShader(fragment_shader)
+    return program
