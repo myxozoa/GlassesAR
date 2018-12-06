@@ -111,17 +111,16 @@ class Glasses:
 
     glDisable(GL_TEXTURE_2D)
 
-  def special(self, key, x, y):
+  def handle_keys(self, window, key, scancode, action, mods):
     # Rotate cube according to keys pressed
-    if key == GLUT_KEY_RIGHT:
-        self.rotate_y += 5
-    if key == GLUT_KEY_LEFT:
+    if key == glfw.KEY_RIGHT:
         self.rotate_y -= 5
-    if key == GLUT_KEY_UP:
-        self.rotate_x += 5
-    if key == GLUT_KEY_DOWN:
+    if key == glfw.KEY_LEFT:
+        self.rotate_y += 5
+    if key == glfw.KEY_UP:
         self.rotate_x -= 5
-    glutPostRedisplay()
+    if key == glfw.KEY_DOWN:
+        self.rotate_x += 5
 
   def draw(self):
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -189,7 +188,7 @@ class Glasses:
     # The callback function for keyboard controls
     # glutSpecialFunc(self.special)
     self.setup_gl()
-
+    glfw.set_key_callback(self.window, self.handle_keys)
     while not glfw.window_should_close(self.window):
       self.draw()
     # glutMainLoop()
