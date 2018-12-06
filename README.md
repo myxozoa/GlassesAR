@@ -1,6 +1,6 @@
 # Glasses
 
-A proof of concept app for virtually (AR) trying on glasses before purchasing
+A proof of concept app for virtually (AR) trying on glasses.
 
 ### Requires:
   - Pipenv

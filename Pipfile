@@ -13,7 +13,8 @@ imutils = "*"
 scipy = "*"
 pyopengl = "*"
 pillow = "*"
-pygame = "*"
+glfw = "*"
+pyglm = "*"
 
 [requires]
 python_version = "3.6"

@@ -1,6 +1,6 @@
-import pygame
+from PIL import Image
 from OpenGL.GL import *
-
+ 
 def load_MTL(filename):
   contents = {}
   mtl = None
@@ -15,16 +15,15 @@ def load_MTL(filename):
     elif values[0] == 'map_Kd':
       # load the texture referred to by this declaration
       mtl[values[0]] = values[1]
-      surf = pygame.image.load("./assets/" + mtl['map_Kd'])
-      image = pygame.image.tostring(surf, 'RGBA', 1)
-      ix, iy = surf.get_rect().size
+      surf = Image.open("./assets/" + mtl['map_Kd'])
+      ix, iy, image = surf.size[0], surf.size[1], surf.tobytes("raw", "RGB", 0, -1)
       texid = mtl['texture_Kd'] = glGenTextures(1)
       glBindTexture(GL_TEXTURE_2D, texid)
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
           GL_LINEAR)
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
           GL_LINEAR)
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ix, iy, 0, GL_RGBA,
+      glTexImage2D(GL_TEXTURE_2D, 0, 3, ix, iy, 0, GL_RGB,
           GL_UNSIGNED_BYTE, image)
     else:
       mtl[values[0]] = list(map(float, values[1:]))
