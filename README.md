@@ -5,7 +5,7 @@ A proof of concept app for virtually (AR) trying on glasses.
 ### Requires:
   - Pipenv
   - Python >= 3.6
-  - GLUT
+  - GLFW
 
 ### OSX:
   - Must have Cmake installed
