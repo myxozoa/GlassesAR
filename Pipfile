@@ -15,6 +15,7 @@ pyopengl = "*"
 pillow = "*"
 glfw = "*"
 pyglm = "*"
+pywavefront = "*"
 
 [requires]
 python_version = "3.6"
