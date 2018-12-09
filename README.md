@@ -11,6 +11,5 @@ A proof of concept app for virtually (AR) trying on glasses.
   - Must have Cmake installed
 
 ## TODO:
-  - Refactor to Modern OpenGL
   - PBR Rendering
   - Model selection
