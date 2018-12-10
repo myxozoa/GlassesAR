@@ -17,7 +17,7 @@ class Glasses:
   def __init__(self):
     self.INVERSE_MATRIX = np.array(INVERSE_MATRIX)
     self.window = None
-    self.webcam = Webcam()
+    # self.webcam = Webcam()
     self.solver = None
     self.webcam_background = None
     self.rotate_y = 0.0
@@ -78,7 +78,7 @@ class Glasses:
     # glEnable(GL_LIGHTING)
     # glEnable(GL_COLOR_MATERIAL)
     # glDepthFunc(GL_LESS)
-    # glEnable(GL_DEPTH_TEST)
+    glEnable(GL_DEPTH_TEST)
     # glShadeModel(GL_SMOOTH)
     # glMatrixMode(GL_PROJECTION)
     # glLoadIdentity()
@@ -199,14 +199,19 @@ class Glasses:
     glfw.poll_events()
 
   def test_draw(self):
-    glClear(GL_COLOR_BUFFER_BIT)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     glUseProgram(self.model_program)
-    projection = glm.perspective(glm.radians(45.0), SIZE[0] / SIZE[1], 0.1, 100.0)
+
+    projection = glm.perspective(glm.radians(45.0), SIZE[1] / SIZE[0], 0.1, 1000.0)
     glUniformMatrix4fv(glGetUniformLocation(self.model_program, "projection"), 1, GL_FALSE, glm.value_ptr(projection))
-    view = glm.translate(glm.mat4(), glm.vec3(0.0, 0.0, 0.0))
+
+    view = glm.mat4(1.0)
+    view = glm.translate(view, glm.vec3(0.0, 0.0, -3.0))
     glUniformMatrix4fv(glGetUniformLocation(self.model_program, "view"), 1, GL_FALSE, glm.value_ptr(view))
-    model = glm.rotate(glm.mat4(), glm.radians(10.0), glm.vec3(0.0, 0.0, 0.0))
+
+    model = glm.mat4(1.0)
+    model = glm.rotate(model, float(glfw.get_time()) * glm.radians(30.0), glm.vec3(1.0, 1.0, 0.0))
     glUniformMatrix4fv(glGetUniformLocation(self.model_program, "model"), 1, GL_FALSE, glm.value_ptr(model))
 
     glBindVertexArray(self.vao)
@@ -240,7 +245,6 @@ class Glasses:
     glfw.terminate()
 
 def main():
-  print('never even running?????')
   prog = Glasses()
   prog.main()
 

@@ -53,7 +53,6 @@ class load_OBJ:
       # T2F, C3F, N3F and V3F may appear in this string
 
       # flatten array of tuples
-      print('=-')
       # print(obj.vertices)
       # print(len(obj.faces))
       # print('mesh #')
