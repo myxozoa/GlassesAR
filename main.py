@@ -84,7 +84,7 @@ class Glasses:
     # glLoadIdentity()
     # gluPerspective(33.7, 1.3, 0.1, 1000.0)
     # glMatrixMode(GL_MODELVIEW)
-    self.model_program = load_shaders("vert.glsl", "frag.glsl")
+    self.model_program = load_shaders("./shaders/model/vert.glsl", "./shaders/model/frag.glsl")
 
     self.obj = load_OBJ(MODEL)
 

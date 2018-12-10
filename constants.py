@@ -24,7 +24,9 @@ APP_NAME = "GlassesAR"
 
 MODEL = "./assets/cube.obj"
 
-SHAPE_PREDICTOR = "shape_predictor_68_face_landmarks.dat"
+SHAPE_PREDICTOR = "./data/shape_predictor_68_face_landmarks.dat"
+
+WEBCAM_CALIB = "./data/webcam_calibration.npz"
 
 RESET_FREQ = 2
 
