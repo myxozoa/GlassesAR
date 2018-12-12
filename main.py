@@ -12,6 +12,21 @@ from constants import *
 import sys
 import ctypes
 import glm
+import math
+
+lightPositions = [
+    glm.vec3(-5.0,  5.0, 5.0),
+    glm.vec3( 5.0,  5.0, 5.0),
+    # glm.vec3(-5.0, -5.0, 5.0),
+    # glm.vec3( 5.0, -5.0, 5.0)
+]
+
+lightColors = [
+    glm.vec3(300.0, 300.0, 300.0),
+    glm.vec3(300.0, 300.0, 300.0),
+    # glm.vec3(300.0, 300.0, 300.0),
+    # glm.vec3(300.0, 300.0, 300.0)
+]
 
 class Glasses:
   def __init__(self):
@@ -211,8 +226,16 @@ class Glasses:
     glUniformMatrix4fv(glGetUniformLocation(self.model_program, "view"), 1, GL_FALSE, glm.value_ptr(view))
 
     model = glm.mat4(1.0)
+    model = glm.translate(model, glm.vec3(0.0, 0.0, -3.0))
     model = glm.rotate(model, float(glfw.get_time()) * glm.radians(30.0), glm.vec3(1.0, 1.0, 0.0))
+    # model = glm.scale(model, glm.vec3(0.05))
     glUniformMatrix4fv(glGetUniformLocation(self.model_program, "model"), 1, GL_FALSE, glm.value_ptr(model))
+
+    for i in range(len(lightPositions)):
+      glUniform3fv(glGetUniformLocation(self.model_program, "lightPositions[" + str(i) + "]"), 1, glm.value_ptr(lightPositions[i]))
+      glUniform3fv(glGetUniformLocation(self.model_program, "lightColors[" + str(i) + "]"), 1, glm.value_ptr(lightColors[i]))
+
+
 
     glBindVertexArray(self.vao)
     glDrawArrays(GL_TRIANGLES, 0, len(self.VERTICES)//3)
