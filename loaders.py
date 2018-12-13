@@ -60,7 +60,7 @@ class load_OBJ:
 
       for name, material in obj.materials.items():
         print(material.vertex_format)
-        print(material.texture)
+        # print(material.texture)
         # print(material.vertices)
         self.buffer_data = self.buffer_data + material.vertices
 

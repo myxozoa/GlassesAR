@@ -28,17 +28,33 @@ lightColors = [
     # glm.vec3(300.0, 300.0, 300.0)
 ]
 
+# webcam_verts = np.array([
+#   # tex coords   # vert coords
+#   0.0, 1.0,    -400, -400, 0.0,
+#   1.0, 1.0,     400, -400, 0.0,
+#   1.0, 0.0,     400, 400, 0.0,
+#   0.0, 0.0,    -400, 400, 0.0
+# ], dtype=np.float32)
+
+webcam_verts = np.array([
+  # tex coords   # vert coords
+  1.0, 1.0,     0.0, 0.0, 0.0,
+  0.0, 1.0,     SIZE[0], 0.0, 0.0,
+  0.0, 0.0,     SIZE[0], SIZE[1], 0.0,
+  1.0, 0.0,    0.0, SIZE[1], 0.0,
+], dtype=np.float32)
+
 class Glasses:
   def __init__(self):
     self.INVERSE_MATRIX = np.array(INVERSE_MATRIX)
     self.window = None
-    # self.webcam = Webcam()
+    self.webcam = Webcam()
     self.solver = None
     self.webcam_background = None
     self.rotate_y = 0.0
     self.rotate_x = 0.0
     self.scale = 8.0
-    self.model_program = None
+    self.model_shader = None
     self.webcam_program = None
     self.vbo = None
     self.vao = None
@@ -55,6 +71,7 @@ class Glasses:
     glfw.make_context_current(self.window)
 
   def setup_gl_objects(self):
+    # setup model data
     self.vao = glGenVertexArrays(1)
     glBindVertexArray(self.vao)
 
@@ -63,17 +80,34 @@ class Glasses:
     glBufferData(GL_ARRAY_BUFFER, self.VERTICES.nbytes, self.VERTICES, GL_STATIC_DRAW)
 
     # Contains the vertex format (string) such as "T2F_N3F_V3F"
-    # texcoord_index = glGetAttribLocation(self.model_program, 'texcoord')
+    # texcoord_index = glGetAttribLocation(self.model_shader, 'texcoord')
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, ctypes.sizeof(GLfloat) * 8, ctypes.c_void_p(0))
     glEnableVertexAttribArray(0)
 
-    # normal_index = glGetAttribLocation(self.model_program, 'normal')
+    # normal_index = glGetAttribLocation(self.model_shader, 'normal')
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, ctypes.sizeof(GLfloat) * 8, ctypes.c_void_p(2 * ctypes.sizeof(GLfloat)))
     glEnableVertexAttribArray(1)
 
-    # vpos_index = glGetAttribLocation(self.model_program, 'vposition')
+    # vpos_index = glGetAttribLocation(self.model_shader, 'vposition')
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, ctypes.sizeof(GLfloat) * 8, ctypes.c_void_p(5 * ctypes.sizeof(GLfloat)))
     glEnableVertexAttribArray(2)
+
+    glBindVertexArray(0)
+    glBindBuffer(GL_ARRAY_BUFFER,0)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0)
+
+    # setup webcam data
+    self.webcam_vao = glGenVertexArrays(1)
+    glBindVertexArray(self.webcam_vao)
+
+    self.webcam_vbo = glGenBuffers(1)
+    glBindBuffer(GL_ARRAY_BUFFER, self.webcam_vbo)
+    glBufferData(GL_ARRAY_BUFFER, webcam_verts.nbytes, webcam_verts, GL_STATIC_DRAW)
+
+    glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, ctypes.sizeof(GLfloat) * 5, ctypes.c_void_p(0))
+    glEnableVertexAttribArray(4)
+    glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, ctypes.sizeof(GLfloat) * 5, ctypes.c_void_p(2 * ctypes.sizeof(GLfloat)))
+    glEnableVertexAttribArray(5)
 
     glBindVertexArray(0)
     glBindBuffer(GL_ARRAY_BUFFER,0)
@@ -99,25 +133,24 @@ class Glasses:
     # glLoadIdentity()
     # gluPerspective(33.7, 1.3, 0.1, 1000.0)
     # glMatrixMode(GL_MODELVIEW)
-    self.model_program = load_shaders("./shaders/model/vert.glsl", "./shaders/model/frag.glsl")
+    self.model_shader = load_shaders("./shaders/model/vert.glsl", "./shaders/model/frag.glsl")
+    self.webcam_shader = load_shaders("./shaders/webcam_feed/vert.glsl", "./shaders/webcam_feed/frag.glsl")
 
     self.obj = load_OBJ(MODEL)
 
     self.VERTICES = np.array(self.obj.buffer_data, dtype=np.float32)
 
     # start webcam thread
-    # self.webcam.start()
+    self.webcam.start()
 
     # initializing solver after opengl context is created
     # self.solver = Solver(self.webcam.camera_matrix, self.webcam.dist_coeffs)
 
     # assign texture
-    # glEnable(GL_TEXTURE_2D)
-    # self.webcam_background = glGenTextures(1)
+    self.webcam_background = glGenTextures(1)
+
 
   def draw_webcam(self, image):
-    glEnable(GL_TEXTURE_2D)
-
     # convert image to opengl tex format
     bg_image = cv2.flip(image, 0)
     bg_image = Image.fromarray(bg_image)
@@ -131,23 +164,29 @@ class Glasses:
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
     glTexImage2D(GL_TEXTURE_2D, 0, 3, ix, iy, 0, GL_RGBA, GL_UNSIGNED_BYTE, bg_image)
 
-    # draw bg
-    glBindTexture(GL_TEXTURE_2D, self.webcam_background)
-    glPushMatrix()
-    glTranslatef(0.0, 0.0, -100.0)
-    glBegin(GL_QUADS)
-    glTexCoord2f(0.0, 1.0)
-    glVertex3f(-40.0, -30.0, 0.0)
-    glTexCoord2f(1.0, 1.0)
-    glVertex3f( 40.0, -30.0, 0.0)
-    glTexCoord2f(1.0, 0.0)
-    glVertex3f( 40.0, 30.0, 0.0)
-    glTexCoord2f(0.0, 0.0)
-    glVertex3f(-40.0, 30.0, 0.0)
-    glEnd()
-    glPopMatrix()
+    glBindTexture(GL_TEXTURE_2D, 0)
 
-    glDisable(GL_TEXTURE_2D)
+    # draw bg
+    glActiveTexture(GL_TEXTURE0)
+    glBindTexture(GL_TEXTURE_2D, self.webcam_background)
+
+    glUseProgram(self.webcam_shader)
+
+    projection = glm.ortho(0.0, SIZE[0], 0.0, SIZE[1], 0.1, 100.0)
+    glUniformMatrix4fv(glGetUniformLocation(self.webcam_shader, "projection"), 1, GL_FALSE, glm.value_ptr(projection))
+
+    view = glm.mat4(1.0)
+    view = glm.translate(view, glm.vec3(0.0, 0.0, -3.0))
+    glUniformMatrix4fv(glGetUniformLocation(self.webcam_shader, "view"), 1, GL_FALSE, glm.value_ptr(view))
+
+    model = glm.mat4(1.0)
+    # model = glm.translate(model, glm.vec3(0.0, 0.0, -3.0))
+    # model = glm.rotate(model, float(glfw.get_time()) * glm.radians(30.0), glm.vec3(1.0, 1.0, 0.0))
+    # model = glm.scale(model, glm.vec3(0.05))
+    glUniformMatrix4fv(glGetUniformLocation(self.webcam_shader, "model"), 1, GL_FALSE, glm.value_ptr(model))
+
+    glBindVertexArray(self.webcam_vao)
+    glDrawArrays(GL_QUADS, 0, len(webcam_verts)//5)
 
   def handle_keys(self, window, key, scancode, action, mods):
     # Rotate cube according to keys pressed
@@ -216,39 +255,32 @@ class Glasses:
   def test_draw(self):
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-    glUseProgram(self.model_program)
+    image = self.webcam.get_current_frame()
 
-    projection = glm.perspective(glm.radians(45.0), SIZE[1] / SIZE[0], 0.1, 1000.0)
-    glUniformMatrix4fv(glGetUniformLocation(self.model_program, "projection"), 1, GL_FALSE, glm.value_ptr(projection))
+    self.draw_webcam(image)
 
-    view = glm.mat4(1.0)
-    view = glm.translate(view, glm.vec3(0.0, 0.0, -3.0))
-    glUniformMatrix4fv(glGetUniformLocation(self.model_program, "view"), 1, GL_FALSE, glm.value_ptr(view))
+    # glUseProgram(self.model_shader)
 
-    model = glm.mat4(1.0)
-    model = glm.translate(model, glm.vec3(0.0, 0.0, -3.0))
-    model = glm.rotate(model, float(glfw.get_time()) * glm.radians(30.0), glm.vec3(1.0, 1.0, 0.0))
-    # model = glm.scale(model, glm.vec3(0.05))
-    glUniformMatrix4fv(glGetUniformLocation(self.model_program, "model"), 1, GL_FALSE, glm.value_ptr(model))
+    # projection = glm.perspective(glm.radians(45.0), SIZE[1] / SIZE[0], 0.1, 1000.0)
+    # glUniformMatrix4fv(glGetUniformLocation(self.model_shader, "projection"), 1, GL_FALSE, glm.value_ptr(projection))
 
-    for i in range(len(lightPositions)):
-      glUniform3fv(glGetUniformLocation(self.model_program, "lightPositions[" + str(i) + "]"), 1, glm.value_ptr(lightPositions[i]))
-      glUniform3fv(glGetUniformLocation(self.model_program, "lightColors[" + str(i) + "]"), 1, glm.value_ptr(lightColors[i]))
+    # view = glm.mat4(1.0)
+    # view = glm.translate(view, glm.vec3(0.0, 0.0, -3.0))
+    # glUniformMatrix4fv(glGetUniformLocation(self.model_shader, "view"), 1, GL_FALSE, glm.value_ptr(view))
+
+    # model = glm.mat4(1.0)
+    # model = glm.translate(model, glm.vec3(0.0, 0.0, -3.0))
+    # # model = glm.rotate(model, float(glfw.get_time()) * glm.radians(30.0), glm.vec3(1.0, 1.0, 0.0))
+    # # model = glm.scale(model, glm.vec3(0.05))
+    # glUniformMatrix4fv(glGetUniformLocation(self.model_shader, "model"), 1, GL_FALSE, glm.value_ptr(model))
+
+    # for i in range(len(lightPositions)):
+    #   glUniform3fv(glGetUniformLocation(self.model_shader, "lightPositions[" + str(i) + "]"), 1, glm.value_ptr(lightPositions[i]))
+    #   glUniform3fv(glGetUniformLocation(self.model_shader, "lightColors[" + str(i) + "]"), 1, glm.value_ptr(lightColors[i]))
 
 
-
-    glBindVertexArray(self.vao)
-    glDrawArrays(GL_TRIANGLES, 0, len(self.VERTICES)//3)
-
-    # glUseProgram(0)
-    # glBindVertexArray(0)
-
-    # glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-    # glEnableVertexAttribArray(0)
-    # glVertexAttribPointer(0,VERT_COMPONENTS,GL_FLOAT,False,0,None)
-    # glDrawArrays(GL_TRIANGLES, 0, 3)
-    # glDisableVertexAttribArray(0)
-    # glUseProgram(0)
+    # glBindVertexArray(self.vao)
+    # glDrawArrays(GL_TRIANGLES, 0, len(self.VERTICES)//8)
 
     glfw.swap_buffers(self.window)
     glfw.poll_events()
@@ -266,6 +298,7 @@ class Glasses:
 
     print('its terminating normally for some reason')
     glfw.terminate()
+    sys.exit()
 
 def main():
   prog = Glasses()
