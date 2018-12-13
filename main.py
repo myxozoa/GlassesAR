@@ -55,7 +55,7 @@ class Glasses:
     self.rotate_x = 0.0
     self.scale = 8.0
     self.model_shader = None
-    self.webcam_program = None
+    self.webcam_shader = None
     self.vbo = None
     self.vao = None
 
@@ -180,7 +180,7 @@ class Glasses:
     glUniformMatrix4fv(glGetUniformLocation(self.webcam_shader, "view"), 1, GL_FALSE, glm.value_ptr(view))
 
     model = glm.mat4(1.0)
-    # model = glm.translate(model, glm.vec3(0.0, 0.0, -3.0))
+    # model = glm.translate(model, glm.vec3(0.0, 0.0, -10.0))
     # model = glm.rotate(model, float(glfw.get_time()) * glm.radians(30.0), glm.vec3(1.0, 1.0, 0.0))
     # model = glm.scale(model, glm.vec3(0.05))
     glUniformMatrix4fv(glGetUniformLocation(self.webcam_shader, "model"), 1, GL_FALSE, glm.value_ptr(model))
@@ -259,28 +259,28 @@ class Glasses:
 
     self.draw_webcam(image)
 
-    # glUseProgram(self.model_shader)
+    glUseProgram(self.model_shader)
 
-    # projection = glm.perspective(glm.radians(45.0), SIZE[1] / SIZE[0], 0.1, 1000.0)
-    # glUniformMatrix4fv(glGetUniformLocation(self.model_shader, "projection"), 1, GL_FALSE, glm.value_ptr(projection))
+    projection = glm.perspective(glm.radians(45.0), SIZE[1] / SIZE[0], 0.1, 1000.0)
+    glUniformMatrix4fv(glGetUniformLocation(self.model_shader, "projection"), 1, GL_FALSE, glm.value_ptr(projection))
 
-    # view = glm.mat4(1.0)
-    # view = glm.translate(view, glm.vec3(0.0, 0.0, -3.0))
-    # glUniformMatrix4fv(glGetUniformLocation(self.model_shader, "view"), 1, GL_FALSE, glm.value_ptr(view))
+    view = glm.mat4(1.0)
+    view = glm.translate(view, glm.vec3(0.0, 0.0, -3.0))
+    glUniformMatrix4fv(glGetUniformLocation(self.model_shader, "view"), 1, GL_FALSE, glm.value_ptr(view))
 
-    # model = glm.mat4(1.0)
-    # model = glm.translate(model, glm.vec3(0.0, 0.0, -3.0))
-    # # model = glm.rotate(model, float(glfw.get_time()) * glm.radians(30.0), glm.vec3(1.0, 1.0, 0.0))
-    # # model = glm.scale(model, glm.vec3(0.05))
-    # glUniformMatrix4fv(glGetUniformLocation(self.model_shader, "model"), 1, GL_FALSE, glm.value_ptr(model))
+    model = glm.mat4(1.0)
+    model = glm.translate(model, glm.vec3(0.0, 0.0, -3.0))
+    # model = glm.rotate(model, float(glfw.get_time()) * glm.radians(30.0), glm.vec3(1.0, 1.0, 0.0))
+    # model = glm.scale(model, glm.vec3(0.05))
+    glUniformMatrix4fv(glGetUniformLocation(self.model_shader, "model"), 1, GL_FALSE, glm.value_ptr(model))
 
-    # for i in range(len(lightPositions)):
-    #   glUniform3fv(glGetUniformLocation(self.model_shader, "lightPositions[" + str(i) + "]"), 1, glm.value_ptr(lightPositions[i]))
-    #   glUniform3fv(glGetUniformLocation(self.model_shader, "lightColors[" + str(i) + "]"), 1, glm.value_ptr(lightColors[i]))
+    for i in range(len(lightPositions)):
+      glUniform3fv(glGetUniformLocation(self.model_shader, "lightPositions[" + str(i) + "]"), 1, glm.value_ptr(lightPositions[i]))
+      glUniform3fv(glGetUniformLocation(self.model_shader, "lightColors[" + str(i) + "]"), 1, glm.value_ptr(lightColors[i]))
 
 
-    # glBindVertexArray(self.vao)
-    # glDrawArrays(GL_TRIANGLES, 0, len(self.VERTICES)//8)
+    glBindVertexArray(self.vao)
+    glDrawArrays(GL_TRIANGLES, 0, len(self.VERTICES)//8)
 
     glfw.swap_buffers(self.window)
     glfw.poll_events()
@@ -297,6 +297,11 @@ class Glasses:
       self.test_draw()
 
     print('its terminating normally for some reason')
+    glDeleteVertexArrays(2, (self.vao, self.webcam_vao))
+    glDeleteBuffers(2, (self.vbo, self.webcam_vbo))
+    glDeleteProgram(self.model_shader)
+    glDeleteProgram(self.webcam_shader)
+
     glfw.terminate()
     sys.exit()
 

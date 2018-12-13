@@ -168,8 +168,8 @@ def load_shaders(vertex_file_path, fragment_file_path):
     info_log = glGetProgramInfoLog(program)
     print(result, info_log)
 
-    # glDetachShader(program, vertex_shader)
-    # glDetachShader(program, fragment_shader)
+    glDetachShader(program, vertex_shader)
+    glDetachShader(program, fragment_shader)
     glDeleteShader(vertex_shader)
     glDeleteShader(fragment_shader)
     return program
