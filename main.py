@@ -38,10 +38,10 @@ lightColors = [
 
 webcam_verts = np.array([
   # tex coords   # vert coords
-  1.0, 1.0,     0.0, 0.0, 0.0,
-  0.0, 1.0,     SIZE[0], 0.0, 0.0,
-  0.0, 0.0,     SIZE[0], SIZE[1], 0.0,
-  1.0, 0.0,    0.0, SIZE[1], 0.0,
+  1.0, 1.0,     0.0, 0.0, -100.0,
+  0.0, 1.0,     SIZE[0], 0.0, -100.0,
+  0.0, 0.0,     SIZE[0], SIZE[1], -100.0,
+  1.0, 0.0,    0.0, SIZE[1], -100.0,
 ], dtype=np.float32)
 
 class Glasses:
@@ -172,11 +172,11 @@ class Glasses:
 
     glUseProgram(self.webcam_shader)
 
-    projection = glm.ortho(0.0, SIZE[0], 0.0, SIZE[1], 0.1, 100.0)
+    projection = glm.ortho(0.0, SIZE[0], 0.0, SIZE[1], 0.1, 200.0)
     glUniformMatrix4fv(glGetUniformLocation(self.webcam_shader, "projection"), 1, GL_FALSE, glm.value_ptr(projection))
 
     view = glm.mat4(1.0)
-    view = glm.translate(view, glm.vec3(0.0, 0.0, -3.0))
+    # view = glm.translate(view, glm.vec3(0.0, 1.0, -3.0))
     glUniformMatrix4fv(glGetUniformLocation(self.webcam_shader, "view"), 1, GL_FALSE, glm.value_ptr(view))
 
     model = glm.mat4(1.0)
@@ -185,8 +185,15 @@ class Glasses:
     # model = glm.scale(model, glm.vec3(0.05))
     glUniformMatrix4fv(glGetUniformLocation(self.webcam_shader, "model"), 1, GL_FALSE, glm.value_ptr(model))
 
+    glDepthMask(GL_FALSE)
+    glDisable(GL_DEPTH_TEST)
+
     glBindVertexArray(self.webcam_vao)
     glDrawArrays(GL_QUADS, 0, len(webcam_verts)//5)
+
+    glDepthMask(GL_TRUE)
+    glEnable(GL_DEPTH_TEST)
+
 
   def handle_keys(self, window, key, scancode, action, mods):
     # Rotate cube according to keys pressed
@@ -278,7 +285,6 @@ class Glasses:
       glUniform3fv(glGetUniformLocation(self.model_shader, "lightPositions[" + str(i) + "]"), 1, glm.value_ptr(lightPositions[i]))
       glUniform3fv(glGetUniformLocation(self.model_shader, "lightColors[" + str(i) + "]"), 1, glm.value_ptr(lightColors[i]))
 
-
     glBindVertexArray(self.vao)
     glDrawArrays(GL_TRIANGLES, 0, len(self.VERTICES)//8)
 
@@ -301,6 +307,7 @@ class Glasses:
     glDeleteBuffers(2, (self.vbo, self.webcam_vbo))
     glDeleteProgram(self.model_shader)
     glDeleteProgram(self.webcam_shader)
+    self.webcam.release()
 
     glfw.terminate()
     sys.exit()
