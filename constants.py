@@ -22,7 +22,7 @@ DEFAULT_K = [[FOCAL_LENGTH, 0, CENTER[0]],
 
 APP_NAME = "GlassesAR"
 
-MODEL = "./assets/Hazmask.obj"
+MODEL = "./assets/cube.obj"
 
 SHAPE_PREDICTOR = "./data/shape_predictor_68_face_landmarks.dat"
 

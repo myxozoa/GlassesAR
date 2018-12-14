@@ -15,8 +15,8 @@ import glm
 import math
 
 lightPositions = [
-    glm.vec3(-5.0,  5.0, 5.0),
-    glm.vec3( 5.0,  5.0, 5.0),
+    glm.vec3(-10.0,  10.0, 10.0),
+    glm.vec3( 10.0,  10.0, 10.0),
     # glm.vec3(-5.0, -5.0, 5.0),
     # glm.vec3( 5.0, -5.0, 5.0)
 ]
@@ -144,7 +144,7 @@ class Glasses:
     self.webcam.start()
 
     # initializing solver after opengl context is created
-    # self.solver = Solver(self.webcam.camera_matrix, self.webcam.dist_coeffs)
+    self.solver = Solver(self.webcam.camera_matrix, self.webcam.dist_coeffs)
 
     # assign texture
     self.webcam_background = glGenTextures(1)
@@ -208,9 +208,6 @@ class Glasses:
 
   def draw(self):
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    glLoadIdentity()
-
-    gluLookAt(0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
 
     image = self.webcam.get_current_frame()
 
@@ -222,7 +219,12 @@ class Glasses:
       # calculate view matrix
       rmtx = cv2.Rodrigues(rotation_vec)[0]
 
-      view_matrix = np.array([[-rmtx[0][0], -rmtx[0][1], -rmtx[0][2], -translation_vec[0]],
+      # view_matrix = np.array([[-rmtx[0][0], -rmtx[0][1], -rmtx[0][2], -translation_vec[0]],
+      #                         [-rmtx[1][0], -rmtx[1][1], -rmtx[1][2], -translation_vec[1]],
+      #                         [-rmtx[2][0], -rmtx[2][1], -rmtx[2][2], -translation_vec[2]],
+      #                         [0.0, 0.0, 0.0, 1.0]])
+
+      view_matrix = np.array([[rmtx[0][0], rmtx[0][1], rmtx[0][2], translation_vec[0]],
                               [-rmtx[1][0], -rmtx[1][1], -rmtx[1][2], -translation_vec[1]],
                               [-rmtx[2][0], -rmtx[2][1], -rmtx[2][2], -translation_vec[2]],
                               [0.0, 0.0, 0.0, 1.0]])
@@ -230,29 +232,28 @@ class Glasses:
       view_matrix *= self.INVERSE_MATRIX
       transp_view_matrix = np.transpose(view_matrix)
 
-      glPushMatrix()
-      glLoadMatrixf(transp_view_matrix)
+      glUseProgram(self.model_shader)
 
-      glScalef(self.scale, self.scale, self.scale)
+      projection = glm.perspective(glm.radians(45.0), SIZE[1] / SIZE[0], 0.1, 1000.0)
+      glUniformMatrix4fv(glGetUniformLocation(self.model_shader, "projection"), 1, GL_FALSE, glm.value_ptr(projection))
 
-      # rotate with arrow keys
-      glRotatef(self.rotate_x, 1.0, 0.0, 0.0)
-      glRotatef(self.rotate_y, 0.0, 1.0, 0.0)
+      view = glm.mat4(1.0)
+      # view = glm.translate(view, glm.vec3(0.0, -1.0, -3.0))
+      glUniformMatrix4fv(glGetUniformLocation(self.model_shader, "view"), 1, GL_FALSE, transp_view_matrix)
 
-      # debug cube
-      # glColor3d(1, 0, 1)
+      model = glm.mat4(1.0)
+      model = glm.translate(model, glm.vec3(0.0, 0.0, 5.5))
+      # model = glm.rotate(model, float(glfw.get_time()) * glm.radians(30.0), glm.vec3(1.0, 1.0, 0.0))
+      model = glm.scale(model, glm.vec3(5.0))
+      glUniformMatrix4fv(glGetUniformLocation(self.model_shader, "model"), 1, GL_FALSE, glm.value_ptr(model))
 
-      # move to bridge of nose
-      # glTranslatef(0.0, 1.0, 1.5)
+      for i in range(len(lightPositions)):
+        glUniform3fv(glGetUniformLocation(self.model_shader, "lightPositions[" + str(i) + "]"), 1, glm.value_ptr(lightPositions[i]))
+        glUniform3fv(glGetUniformLocation(self.model_shader, "lightColors[" + str(i) + "]"), 1, glm.value_ptr(lightColors[i]))
 
-      glTranslatef(0.0, 0.2 , 0.0)
+      glBindVertexArray(self.vao)
+      glDrawArrays(GL_TRIANGLES, 0, len(self.VERTICES)//8)
 
-      # render obj
-      glCallList(obj_data.gl_list)
-
-      # reset draw color for further rendering
-      glColor3d(1,1,1)
-      glPopMatrix()
     else:
       print('face not found')
 
@@ -300,7 +301,7 @@ class Glasses:
     glfw.set_key_callback(self.window, self.handle_keys)
 
     while not glfw.window_should_close(self.window):
-      self.test_draw()
+      self.draw()
 
     print('its terminating normally for some reason')
     glDeleteVertexArrays(2, (self.vao, self.webcam_vao))
