@@ -38,10 +38,10 @@ lightColors = [
 
 webcam_verts = np.array([
   # tex coords   # vert coords
-  1.0, 1.0,     0.0, 0.0, -100.0,
-  0.0, 1.0,     SIZE[0], 0.0, -100.0,
-  0.0, 0.0,     SIZE[0], SIZE[1], -100.0,
-  1.0, 0.0,    0.0, SIZE[1], -100.0,
+  0.0, 1.0,     0.0, 0.0, 0.0,
+  1.0, 1.0,     SIZE[0], 0.0, 0.0,
+  1.0, 0.0,     SIZE[0], SIZE[1], 0.0,
+  0.0, 0.0,     0.0, SIZE[1], 0.0,
 ], dtype=np.float32)
 
 class Glasses:
@@ -172,16 +172,16 @@ class Glasses:
 
     glUseProgram(self.webcam_shader)
 
-    projection = glm.ortho(0.0, SIZE[0], 0.0, SIZE[1], 0.1, 200.0)
+    projection = glm.ortho(0.0, SIZE[0], 0.0, SIZE[1], 0.1, 100.0)
     glUniformMatrix4fv(glGetUniformLocation(self.webcam_shader, "projection"), 1, GL_FALSE, glm.value_ptr(projection))
 
     view = glm.mat4(1.0)
-    # view = glm.translate(view, glm.vec3(0.0, 1.0, -3.0))
+    view = glm.translate(view, glm.vec3(0.0, 0.0, -3.0))
     glUniformMatrix4fv(glGetUniformLocation(self.webcam_shader, "view"), 1, GL_FALSE, glm.value_ptr(view))
 
     model = glm.mat4(1.0)
-    # model = glm.translate(model, glm.vec3(0.0, 0.0, -10.0))
-    # model = glm.rotate(model, float(glfw.get_time()) * glm.radians(30.0), glm.vec3(1.0, 1.0, 0.0))
+    model = glm.translate(model, glm.vec3(0.0, 0.0, -10.0))
+    # model = glm.rotate(model, glm.radians(180.0), glm.vec3(1.0, 0.0, 0.0))
     # model = glm.scale(model, glm.vec3(0.05))
     glUniformMatrix4fv(glGetUniformLocation(self.webcam_shader, "model"), 1, GL_FALSE, glm.value_ptr(model))
 
@@ -219,12 +219,7 @@ class Glasses:
       # calculate view matrix
       rmtx = cv2.Rodrigues(rotation_vec)[0]
 
-      # view_matrix = np.array([[-rmtx[0][0], -rmtx[0][1], -rmtx[0][2], -translation_vec[0]],
-      #                         [-rmtx[1][0], -rmtx[1][1], -rmtx[1][2], -translation_vec[1]],
-      #                         [-rmtx[2][0], -rmtx[2][1], -rmtx[2][2], -translation_vec[2]],
-      #                         [0.0, 0.0, 0.0, 1.0]])
-
-      view_matrix = np.array([[rmtx[0][0], rmtx[0][1], rmtx[0][2], translation_vec[0]],
+      view_matrix = np.array([[-rmtx[0][0], -rmtx[0][1], -rmtx[0][2], -translation_vec[0]],
                               [-rmtx[1][0], -rmtx[1][1], -rmtx[1][2], -translation_vec[1]],
                               [-rmtx[2][0], -rmtx[2][1], -rmtx[2][2], -translation_vec[2]],
                               [0.0, 0.0, 0.0, 1.0]])
@@ -234,7 +229,7 @@ class Glasses:
 
       glUseProgram(self.model_shader)
 
-      projection = glm.perspective(glm.radians(45.0), SIZE[1] / SIZE[0], 0.1, 1000.0)
+      projection = glm.perspective(glm.radians(33.7), SIZE[1] / SIZE[0], 0.1, 1000.0)
       glUniformMatrix4fv(glGetUniformLocation(self.model_shader, "projection"), 1, GL_FALSE, glm.value_ptr(projection))
 
       view = glm.mat4(1.0)
