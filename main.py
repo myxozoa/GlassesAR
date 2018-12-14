@@ -219,6 +219,7 @@ class Glasses:
       # calculate view matrix
       rmtx = cv2.Rodrigues(rotation_vec)[0]
 
+      # construct new matrix with translation and invert so the transformation matches the face on screen
       view_matrix = np.array([[-rmtx[0][0], -rmtx[0][1], -rmtx[0][2], -translation_vec[0]],
                               [-rmtx[1][0], -rmtx[1][1], -rmtx[1][2], -translation_vec[1]],
                               [-rmtx[2][0], -rmtx[2][1], -rmtx[2][2], -translation_vec[2]],
