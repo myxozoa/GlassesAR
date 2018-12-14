@@ -13,7 +13,9 @@ imutils = "*"
 scipy = "*"
 pyopengl = "*"
 pillow = "*"
-pygame = "*"
+glfw = "*"
+pyglm = "*"
+pywavefront = "*"
 
 [requires]
 python_version = "3.6"
